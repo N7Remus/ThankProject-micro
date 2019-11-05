@@ -1,4 +1,3 @@
-# Python 3
 '''
  +-----+-----+---------+------+---+---Pi 3B--+---+------+---------+-----+-----+
  | BCM | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | BCM |
@@ -284,10 +283,15 @@ def start_server(path, port=9000):
 
                 # convert into angle
                 heading_angle = int(heading * 180 / pi)
+                # van szög, van gyorsulás, ha minden igaz van minden adat az értélel letárolására, illetve visszatöltésére
+                # TODO Visszatöltés megírása.
 
-
-
-                content = self.http_temp(True, "<p>Szög "+str(heading_angle)+'°</p><p style="color:'+dist_color+'">'+str(int(dist))+'cm</p>',False)
+                content = self.http_temp(True, "<p>Szög "+
+                                         str(heading_angle)+
+                                         '°</p><p style="color:'+
+                                         dist_color+'">'+
+                                         str(int(dist))+
+                                         'cm</p>',False)
                 # content = self.http_temp(True, path)
             elif path=="/":
                 content = self.http_temp(False)
