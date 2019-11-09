@@ -27,19 +27,35 @@
  +-----+-----+---------+------+---+---Pi 3B--+---+------+---------+-----+-----+
 verzió mic2-py_v2_1
 '''
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import urllib.parse as urlparse
-import smbus		#import SMBus module of I2C
-from time import sleep  #import sleep
-import math
 
 try:
     import RPi.GPIO as GPIO
 except RuntimeError:
     print(
         "Error importing RPi.GPIO!  This is probably because you need superuser privileges.  You can achieve this by using 'sudo' to run your script")
-import time, os, sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import time
+import urllib.parse as urlparse
+import smbus		#import SMBus module of I2C
+import math
 import threading
+from multiprocessing import Pool
+pool = Pool(processes=2)
+
+
+# webszerver config
+
+HOST_NAME = '0.0.0.0'
+PORT_NUMBER = 9000
+
+# USER controll enabled
+# ha hamis, akkor a mozgatás le van tiltva.
+UCE=True
+
+
+# https://sourceforge.net/p/raspberry-gpio-python/wiki/PWM/ example alajpján
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
 
 # some MPU6050 Registers and their Address
 Register_A = 0  # Address of Configuration register A
@@ -53,8 +69,6 @@ declination = -0.00669  # define declination angle of location where measurement
 pi = 3.14159265359  # define pi value
 
 address = 0x68
-
-
 def Magnetometer_Init():
     bus.write_byte_data(address, 0x37, 0x02)
     bus.write_byte_data(address, 0x6A, 0x00)
@@ -68,8 +82,6 @@ def Magnetometer_Init():
 
     # Write to mode Register for selecting mode
     bus.write_byte_data(Device_Address, Register_mode, 0)
-
-
 def read_raw_data(addr):
     # Read raw 16-bit value
     high = bus.read_byte_data(Device_Address, addr)
@@ -83,43 +95,35 @@ def read_raw_data(addr):
         value = value - 65536
     return value
 
-
 bus = smbus.SMBus(1)  # or bus = smbus.SMBus(0) for older version boards
 Device_Address = 0x1e  # HMC5883L magnetometer device address
 
 Magnetometer_Init()  # initialize HMC5883L magnetometer
 
-GPIO.setmode(GPIO.BCM) # Bcm kiosztás alapján címzem a pineket.
-GPIO.setwarnings(False)
 
-# pwm pinek 13,19 | 18,12
-LEFT_FORWARD = 13
-LEFT_BACKWARD = 19
-RIGHT_FORWARD = 18
-RIGHT_BACKWARD = 12
+LEFT_FORWARD_PIN = 13
+LEFT_BACKWARD_PIN = 19
+RIGHT_FORWARD_PIN = 18
+RIGHT_BACKWARD_PIN = 12
 
-# Left
-GPIO.setup(LEFT_FORWARD, GPIO.OUT)
-GPIO.setup(LEFT_BACKWARD, GPIO.OUT)
-# right
-GPIO.setup(RIGHT_FORWARD, GPIO.OUT)
-GPIO.setup(RIGHT_BACKWARD, GPIO.OUT)
+GPIO.setup(LEFT_FORWARD_PIN, GPIO.OUT)
+GPIO.setup(LEFT_BACKWARD_PIN, GPIO.OUT)
+GPIO.setup(RIGHT_FORWARD_PIN, GPIO.OUT)
+GPIO.setup(RIGHT_BACKWARD_PIN, GPIO.OUT)
 
+LEFT_FORWARD = GPIO.PWM(LEFT_FORWARD_PIN, 50)
+LEFT_BACKWARD = GPIO.PWM(LEFT_BACKWARD_PIN, 50)
+RIGHT_FORWARD = GPIO.PWM(RIGHT_FORWARD_PIN, 50)
+RIGHT_BACKWARD = GPIO.PWM(RIGHT_BACKWARD_PIN, 50)  # channel=12 frequency=50Hz
 
-pwm = {}
-
-pwm[LEFT_FORWARD] = GPIO.PWM(LEFT_FORWARD, 1000)
-pwm[LEFT_BACKWARD] = GPIO.PWM(LEFT_BACKWARD, 1000)
-pwm[RIGHT_FORWARD] = GPIO.PWM(RIGHT_FORWARD, 1000)
-pwm[RIGHT_BACKWARD] = GPIO.PWM(RIGHT_BACKWARD, 1000)
-
-HOST_NAME = '0.0.0.0'
-PORT_NUMBER = 9000
-
-dist = 0
-dist_color = "red"
-width = 0
-height = 0
+LEFT_BACKWARD.start(0)
+LEFT_BACKWARD_LAST = 0
+LEFT_FORWARD.start(0)
+LEFT_FORWARD_LAST = 0
+RIGHT_FORWARD.start(0)
+RIGHT_FORWARD_LAST = 0
+RIGHT_BACKWARD.start(0)
+RIGHT_BACKWARD_LAST = 0
 
 def angle():
     # magnetométer infója
@@ -144,16 +148,20 @@ def angle():
     heading_angle = int(heading * 180 / pi)
     return heading_angle
 
-def analogWrite(pin, freq):
-    global pwm
+def changePWM(pin,last, goal):
+    i = 1
+    if last>goal:
+        i = -i
+    for dc in range(last, goal, i):
+        pin.ChangeDutyCycle(dc)
+        time.sleep(0.1)
+        print("pwm",dc)
 
-    print("Pin: ", pin, "Freq: ", freq)
+def run_process( arr):
+    pin, last, goal = tuple(arr.split(","))
+    changePWM(pin, last, goal)
 
-    pwm[pin].start(0)
-    pwm[pin].ChangeDutyCycle(freq)
-
-
-def mover(forward_dir, side_dir):
+def moveTank(forward_dir, side_dir):
     # értékellenörzés.
     if forward_dir > 100:
         forward_dir = 100
@@ -166,50 +174,43 @@ def mover(forward_dir, side_dir):
 
     if side_dir < -100:
         side_dir = -100
+    global pool,LEFT_BACKWARD_LAST, LEFT_FORWARD, LEFT_FORWARD_LAST, RIGHT_FORWARD, RIGHT_FORWARD_LAST, RIGHT_BACKWARD, RIGHT_BACKWARD_LAST
+    if abs(forward_dir) < 10 and side_dir > 20:
+        print("balra")
 
-    tmp = abs(forward_dir) - abs(side_dir)
-    global pwm
+        changePWM(LEFT_FORWARD, LEFT_FORWARD_LAST, 0)
+        LEFT_FORWARD_LAST = 0
+        changePWM(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, 0)
+        RIGHT_BACKWARD_LAST = 0
+        changePWM(LEFT_BACKWARD, LEFT_BACKWARD_LAST, abs(side_dir))
+        LEFT_BACKWARD_LAST = 0
+        changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, abs(side_dir))
+        RIGHT_FORWARD_LAST = 0
 
-    if abs(forward_dir) <= 10:
-        for i in pwm:
-            pwm[i].ChangeDutyCycle(0)
-        GPIO.output(LEFT_FORWARD, False)
-        GPIO.output(LEFT_BACKWARD, False)
-        GPIO.output(RIGHT_FORWARD, False)
-        GPIO.output(RIGHT_BACKWARD, False)
+    elif abs(forward_dir) < 10 and side_dir < -20:
+        print("jobbra")
+
+        RIGHT_FORWARD_LAST = 0
+        process = ([LEFT_BACKWARD, LEFT_BACKWARD_LAST, 0],[RIGHT_FORWARD, RIGHT_FORWARD_LAST, 0])
+        LEFT_BACKWARD_LAST = 0
+        pool.map(changePWM, process)
+
+        #changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, 0)
+        print("start stage 2")
+        #process=[(LEFT_FORWARD, LEFT_FORWARD_LAST, abs(side_dir)),(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, abs(side_dir))]
+        #pool.map(run_process, process)
+
+        #changePWM(LEFT_FORWARD, LEFT_FORWARD_LAST, abs(side_dir))
+        LEFT_FORWARD_LAST = abs(side_dir)
+        #changePWM(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, abs(side_dir))
+        RIGHT_BACKWARD_LAST = abs(side_dir)
+
 
     else:
         if forward_dir > 0:
-
-            pwm[LEFT_BACKWARD].stop()
-            pwm[RIGHT_BACKWARD].stop()
-            GPIO.output(LEFT_BACKWARD, False)
-            GPIO.output(RIGHT_BACKWARD, False)
-
-            if (side_dir > 0):
-                analogWrite(LEFT_FORWARD, round((tmp if tmp > 0 else 0)))
-                analogWrite(RIGHT_FORWARD, round((abs(forward_dir))))
-
-            if (side_dir < 0):
-                analogWrite(LEFT_FORWARD, round((abs(forward_dir))))
-                analogWrite(RIGHT_FORWARD, round((tmp if tmp > 0 else 0)))
-
-        if (forward_dir < 0):
-
-            pwm[LEFT_FORWARD].stop()
-            pwm[RIGHT_FORWARD].stop()
-            GPIO.output(LEFT_FORWARD, False)
-            GPIO.output(RIGHT_FORWARD, False)
-
-            if side_dir > 0:
-                analogWrite(LEFT_BACKWARD, round((tmp if tmp > 0 else 0)))
-                analogWrite(RIGHT_BACKWARD, round((abs(forward_dir))))
-
-            if side_dir < 0:
-                analogWrite(LEFT_BACKWARD, round((abs(forward_dir))))
-                analogWrite(RIGHT_BACKWARD, round((tmp if tmp > 0 else 0)))
-
-
+            print("elore")
+        elif forward_dir < 0:
+            print("hatra")
 def start_server(path, port=9000):
     class MyHandler(BaseHTTPRequestHandler):
         def do_HEAD(self):
@@ -218,18 +219,8 @@ def start_server(path, port=9000):
             self.end_headers()
 
         def do_GET(self):
-            paths = {
-                '/foo': {'status': 200},
-                '/ajax': {'status': 200},
-                '/bar': {'status': 302},
-                '/baz': {'status': 404},
-                '/qux': {'status': 500}
-            }
 
-            if self.path in paths:
-                self.respond(paths[self.path])
-            else:
-                self.respond({'status': 200})
+            self.respond({'status': 200})
 
         #            self.respond({'status': 500})
 
@@ -239,7 +230,6 @@ def start_server(path, port=9000):
                 with open("html_page/basic.html", "r") as f:
                     s = f.read()
             else:
-
                 if isfile:
                     with open(file, "r") as f:
                         s = f.read()
@@ -264,7 +254,8 @@ def start_server(path, port=9000):
                     print("Width: ", width, "Heigth: ", height)
                 except Exception as e:
                     print(e)
-
+                if UCE:
+                    moveTank(height, width)
                 # van szög, van gyorsulás, ha minden igaz van minden adat az értélel letárolására, illetve visszatöltésére
                 # TODO Visszatöltés megírása.
                 heading_angle = angle()
@@ -296,18 +287,21 @@ def start_server(path, port=9000):
         print(time.asctime(), 'Server Stops - %s:%s' % (HOST_NAME, PORT_NUMBER))
 
 
-# Start the server in a new thread
-port = 9000
 daemon = threading.Thread(name='daemon_server',
                           target=start_server,
-                          args=('.', port))
+                          args=('.', PORT_NUMBER))
 daemon.setDaemon(True)  # Set as a daemon so it will be killed once the main thread is dead.
 daemon.start()
 
+
 try:
-    while True:
-        time.sleep(1)
-# Reset by pressing CTRL + C
+    time.sleep(100)
+    # ez a rész függetlenül fut a webszerver hívásoktól
+
 except KeyboardInterrupt:
-    print("Measurement stopped by User")
-    GPIO.cleanup()
+    pass
+LEFT_FORWARD.stop()
+LEFT_BACKWARD.stop()
+RIGHT_FORWARD.stop()
+RIGHT_BACKWARD.stop()
+GPIO.cleanup()

@@ -91,12 +91,26 @@ Magnetometer_Init()  # initialize HMC5883L magnetometer
 
 GPIO.setmode(GPIO.BCM) # Bcm kiosztás alapján címzem a pineket.
 GPIO.setwarnings(False)
+# set GPIO Pins
+GPIO_TRIGGER = 14
+GPIO_ECHO = 15
+
+# set GPIO direction (IN / OUT)
+GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
+GPIO.setup(GPIO_ECHO, GPIO.IN)
 
 # pwm pinek 13,19 | 18,12
 LEFT_FORWARD = 13
 LEFT_BACKWARD = 19
 RIGHT_FORWARD = 18
 RIGHT_BACKWARD = 12
+
+# RGB let pinek.
+RED = 17
+GREEN = 27
+BLUE = 22
+# Feéhasználó adhat parancsot?
+UCE = True
 
 # Left
 GPIO.setup(LEFT_FORWARD, GPIO.OUT)
@@ -105,6 +119,9 @@ GPIO.setup(LEFT_BACKWARD, GPIO.OUT)
 GPIO.setup(RIGHT_FORWARD, GPIO.OUT)
 GPIO.setup(RIGHT_BACKWARD, GPIO.OUT)
 
+GPIO.setup(RED, GPIO.OUT)
+GPIO.setup(GREEN, GPIO.OUT)
+GPIO.setup(BLUE, GPIO.OUT)
 
 pwm = {}
 
@@ -121,28 +138,6 @@ dist_color = "red"
 width = 0
 height = 0
 
-def angle():
-    # magnetométer infója
-    # Read Accelerometer raw value
-    x = read_raw_data(X_axis_H)
-    z = read_raw_data(Z_axis_H)
-    y = read_raw_data(Y_axis_H)
-
-    print(x, y, z)
-
-    heading = math.atan2(y, x) + declination
-
-    # Due to declination check for >360 degree
-    if (heading > 2 * pi):
-        heading = heading - 2 * pi
-
-    # check for sign
-    if (heading < 0):
-        heading = heading + 2 * pi
-
-    # convert into angle
-    heading_angle = int(heading * 180 / pi)
-    return heading_angle
 
 def analogWrite(pin, freq):
     global pwm
@@ -264,13 +259,40 @@ def start_server(path, port=9000):
                     print("Width: ", width, "Heigth: ", height)
                 except Exception as e:
                     print(e)
+                if UCE:
+                    mover(height, width)
+                # távolságmérő szenzor infója
+                global dist
+                # magnetométer infója
+                # Read Accelerometer raw value
+                x = read_raw_data(X_axis_H)
+                z = read_raw_data(Z_axis_H)
+                y = read_raw_data(Y_axis_H)
 
+                print(x, y, z)
+
+                heading = math.atan2(y, x) + declination
+
+                # Due to declination check for >360 degree
+                if (heading > 2 * pi):
+                    heading = heading - 2 * pi
+
+                # check for sign
+                if (heading < 0):
+                    heading = heading + 2 * pi
+
+                # convert into angle
+                heading_angle = int(heading * 180 / pi)
                 # van szög, van gyorsulás, ha minden igaz van minden adat az értélel letárolására, illetve visszatöltésére
                 # TODO Visszatöltés megírása.
-                heading_angle = angle()
+
                 content = self.http_temp(True, "<p>Szög "+
                                          str(heading_angle)+
-                                         '°</p>',False)
+                                         '°</p><p style="color:'+
+                                         dist_color+'">'+
+                                         str(int(dist))+
+                                         'cm</p>',False)
+                # content = self.http_temp(True, path)
             elif path=="/":
                 content = self.http_temp(False)
             else:
@@ -304,8 +326,69 @@ daemon = threading.Thread(name='daemon_server',
 daemon.setDaemon(True)  # Set as a daemon so it will be killed once the main thread is dead.
 daemon.start()
 
+
+# Open the web browser
+# webbrowser.open('http://localhost:{}'.format(port))
+def distance():
+    # set Trigger to HIGH
+    GPIO.output(GPIO_TRIGGER, True)
+
+    # set Trigger after 0.01ms to LOW
+    time.sleep(0.00001)
+    GPIO.output(GPIO_TRIGGER, False)
+
+    StartTime = time.time()
+    StopTime = time.time()
+
+    # save StartTime
+    while GPIO.input(GPIO_ECHO) == 0:
+        StartTime = time.time()
+
+    # save time of arrival
+    while GPIO.input(GPIO_ECHO) == 1:
+        StopTime = time.time()
+
+    # time difference between start and arrival
+    TimeElapsed = StopTime - StartTime
+    # multiply with the sonic speed (34300 cm/s)
+    # and divide by 2, because there and back
+    distance = (TimeElapsed * 34300) / 2
+
+    return distance
+
+
+
 try:
     while True:
+        dist = distance()
+        if dist < 30:
+            UCE = False
+            dist_color="red"
+            GPIO.output(RED, True)
+            GPIO.output(BLUE, False)
+            GPIO.output(GREEN, False)
+            analogWrite(LEFT_BACKWARD, 50)
+            time.sleep(1.75)
+            analogWrite(LEFT_BACKWARD, 0)
+
+            UCE = True
+
+        elif dist < 130:
+            dist_color="blue"
+            GPIO.output(RED, False)
+            GPIO.output(BLUE, True)
+            GPIO.output(GREEN, False)
+        elif dist > 400:
+            dist_color = "greem"
+            GPIO.output(RED, True)
+            GPIO.output(BLUE, True)
+            GPIO.output(GREEN, True)
+        else:
+            dist_color = "white"
+            GPIO.output(RED, False)
+            GPIO.output(BLUE, False)
+            GPIO.output(GREEN, True)
+        print("Measured Distance = %.1f cm" % dist)
         time.sleep(1)
 # Reset by pressing CTRL + C
 except KeyboardInterrupt:
