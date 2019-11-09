@@ -39,8 +39,7 @@ import urllib.parse as urlparse
 import smbus		#import SMBus module of I2C
 import math
 import threading
-from multiprocessing import Pool
-pool = Pool(processes=2)
+from multiprocessing import Process
 
 
 # webszerver config
@@ -55,7 +54,7 @@ UCE=True
 
 # https://sourceforge.net/p/raspberry-gpio-python/wiki/PWM/ example alajpján
 GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
+GPIO.setwarnings(True)
 
 # some MPU6050 Registers and their Address
 Register_A = 0  # Address of Configuration register A
@@ -105,6 +104,7 @@ LEFT_FORWARD_PIN = 13
 LEFT_BACKWARD_PIN = 19
 RIGHT_FORWARD_PIN = 18
 RIGHT_BACKWARD_PIN = 12
+pwmchange = []
 
 GPIO.setup(LEFT_FORWARD_PIN, GPIO.OUT)
 GPIO.setup(LEFT_BACKWARD_PIN, GPIO.OUT)
@@ -149,17 +149,26 @@ def angle():
     return heading_angle
 
 def changePWM(pin,last, goal):
-    i = 1
+
+
+    #global pwmchange
+    #print(pin)
+    #pin.start(last)
+    #pwmchange.append(pin)
+    i = 5
     if last>goal:
         i = -i
     for dc in range(last, goal, i):
         pin.ChangeDutyCycle(dc)
         time.sleep(0.1)
-        print("pwm",dc)
+        print("pwm",dc,goal)
+    del pwmchange[pwmchange.index(pin)]
 
-def run_process( arr):
-    pin, last, goal = tuple(arr.split(","))
-    changePWM(pin, last, goal)
+
+def wait_process():
+    global  pwmchange
+    while len(pwmchange)!=0:
+        print(time)
 
 def moveTank(forward_dir, side_dir):
     # értékellenörzés.
@@ -177,38 +186,76 @@ def moveTank(forward_dir, side_dir):
     global pool,LEFT_BACKWARD_LAST, LEFT_FORWARD, LEFT_FORWARD_LAST, RIGHT_FORWARD, RIGHT_FORWARD_LAST, RIGHT_BACKWARD, RIGHT_BACKWARD_LAST
     if abs(forward_dir) < 10 and side_dir > 20:
         print("balra")
+        '''
+        p1 = Process(target=changePWM, args=("LEFT_FORWARD", LEFT_FORWARD_LAST, 0))
+        p1.start()
+        p2 = Process(target=changePWM, args=("RIGHT_BACKWARD", RIGHT_BACKWARD_LAST, 0))
+        p2.start()
+        p1.join()
+        p2.join()
 
+        time.sleep(0.5)
+        wait_process()
+        '''
         changePWM(LEFT_FORWARD, LEFT_FORWARD_LAST, 0)
         LEFT_FORWARD_LAST = 0
         changePWM(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, 0)
         RIGHT_BACKWARD_LAST = 0
+        '''
+        p3 = Process(target=changePWM, args=("LEFT_BACKWARD", LEFT_BACKWARD_LAST, abs(side_dir),))
+        p3.start()
+        p4 = Process(target=changePWM, args=("RIGHT_FORWARD", RIGHT_FORWARD_LAST, abs(side_dir),))
+        p4.start()
+        p3.join()
+        p4.join()
+
+        time.sleep(0.5)
+        wait_process()
+        '''
         changePWM(LEFT_BACKWARD, LEFT_BACKWARD_LAST, abs(side_dir))
-        LEFT_BACKWARD_LAST = 0
+        LEFT_BACKWARD_LAST = abs(side_dir)
         changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, abs(side_dir))
-        RIGHT_FORWARD_LAST = 0
+        RIGHT_FORWARD_LAST = abs(side_dir)
 
     elif abs(forward_dir) < 10 and side_dir < -20:
         print("jobbra")
+        changePWM(LEFT_BACKWARD, LEFT_BACKWARD_LAST, 0)
+        changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, 0)
 
-        RIGHT_FORWARD_LAST = 0
-        process = ([LEFT_BACKWARD, LEFT_BACKWARD_LAST, 0],[RIGHT_FORWARD, RIGHT_FORWARD_LAST, 0])
+        '''
+        p1 = Process(target=changePWM, args=("LEFT_BACKWARD", LEFT_BACKWARD_LAST, 0))
+        p1.start()
+        p2 = Process(target=changePWM, args=("RIGHT_FORWARD", RIGHT_FORWARD_LAST, 0))
+        p2.start()
+        p1.join()
+        p2.join()
+        time.sleep(0.5)
+        wait_process()
+        '''
         LEFT_BACKWARD_LAST = 0
-        pool.map(changePWM, process)
-
+        RIGHT_FORWARD_LAST = 0
+        '''
         #changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, 0)
         print("start stage 2")
-        #process=[(LEFT_FORWARD, LEFT_FORWARD_LAST, abs(side_dir)),(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, abs(side_dir))]
-        #pool.map(run_process, process)
+        p3 = Process(target=changePWM, args=("LEFT_FORWARD", LEFT_FORWARD_LAST, abs(side_dir),))
+        p3.start()
+        p4 = Process(target=changePWM, args=("RIGHT_BACKWARD", RIGHT_BACKWARD_LAST, abs(side_dir),))
+        p4.start()
+        p3.join()
+        p4.join()
 
-        #changePWM(LEFT_FORWARD, LEFT_FORWARD_LAST, abs(side_dir))
+        time.sleep(0.5)
+        wait_process()
+        '''
+        changePWM(LEFT_FORWARD, LEFT_FORWARD_LAST, abs(side_dir))
+        changePWM(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, abs(side_dir))
         LEFT_FORWARD_LAST = abs(side_dir)
-        #changePWM(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, abs(side_dir))
         RIGHT_BACKWARD_LAST = abs(side_dir)
-
 
     else:
         if forward_dir > 0:
             print("elore")
+
         elif forward_dir < 0:
             print("hatra")
 def start_server(path, port=9000):
