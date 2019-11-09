@@ -52,7 +52,7 @@ UCE=True
 
 # https://sourceforge.net/p/raspberry-gpio-python/wiki/PWM/ example alajpján
 GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(True)
+GPIO.setwarnings(False)
 
 # some MPU6050 Registers and their Address
 Register_A = 0  # Address of Configuration register A
@@ -184,20 +184,8 @@ def moveTank(forward_dir, side_dir):
 
     global LEFT_BACKWARD_LAST, LEFT_FORWARD, LEFT_FORWARD_LAST, RIGHT_FORWARD, RIGHT_FORWARD_LAST, RIGHT_BACKWARD, RIGHT_BACKWARD_LAST
     #fordulás
-    if abs(forward_dir) < 10 and side_dir > 20:
+    if abs(forward_dir) < 10 and side_dir > 15:
         print("balra")
-
-        changePWM(LEFT_FORWARD, LEFT_FORWARD_LAST, 0)
-        changePWM(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, 0)
-        LEFT_FORWARD_LAST = 0
-        RIGHT_BACKWARD_LAST = 0
-
-        changePWM(LEFT_BACKWARD, LEFT_BACKWARD_LAST, abs(side_dir))
-        changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, abs(side_dir))
-        LEFT_BACKWARD_LAST = abs(side_dir)
-        RIGHT_FORWARD_LAST = abs(side_dir)
-    elif abs(forward_dir) < 10 and abs(side_dir) > 20:
-        print("jobbra")
 
         changePWM(LEFT_BACKWARD, LEFT_BACKWARD_LAST, 0)
         changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, 0)
@@ -208,10 +196,22 @@ def moveTank(forward_dir, side_dir):
         changePWM(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, abs(side_dir))
         LEFT_FORWARD_LAST = abs(side_dir)
         RIGHT_BACKWARD_LAST = abs(side_dir)
+    elif abs(forward_dir) < 10 and abs(side_dir) > 15:
+        print("jobbra")
+
+        changePWM(LEFT_FORWARD, LEFT_FORWARD_LAST, 0)
+        changePWM(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, 0)
+        LEFT_FORWARD_LAST = 0
+        RIGHT_BACKWARD_LAST = 0
+
+        changePWM(LEFT_BACKWARD, LEFT_BACKWARD_LAST, abs(side_dir))
+        changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, abs(side_dir))
+        LEFT_BACKWARD_LAST = abs(side_dir)
+        RIGHT_FORWARD_LAST = abs(side_dir)
     else:
 
-        ballra = abs(side_dir) if side_dir > 0 else 0
-        jobbra = abs(side_dir) if side_dir < 0 else 0
+        jobbra = abs(side_dir) if side_dir > 0 else 0
+        ballra= abs(side_dir) if side_dir < 0 else 0
 
         if forward_dir > 0:
             print("elore")
@@ -341,8 +341,7 @@ try:
 
 except KeyboardInterrupt:
     pass
-LEFT_FORWARD.stop()
-LEFT_BACKWARD.stop()
-RIGHT_FORWARD.stop()
-RIGHT_BACKWARD.stop()
+for p in pwm:
+    p.stop()
+
 GPIO.cleanup()
