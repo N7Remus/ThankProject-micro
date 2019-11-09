@@ -39,8 +39,6 @@ import urllib.parse as urlparse
 import smbus		#import SMBus module of I2C
 import math
 import threading
-from multiprocessing import Process
-
 
 # webszerver config
 
@@ -104,25 +102,27 @@ LEFT_FORWARD_PIN = 13
 LEFT_BACKWARD_PIN = 19
 RIGHT_FORWARD_PIN = 18
 RIGHT_BACKWARD_PIN = 12
-pwmchange = []
 
 GPIO.setup(LEFT_FORWARD_PIN, GPIO.OUT)
 GPIO.setup(LEFT_BACKWARD_PIN, GPIO.OUT)
 GPIO.setup(RIGHT_FORWARD_PIN, GPIO.OUT)
 GPIO.setup(RIGHT_BACKWARD_PIN, GPIO.OUT)
+pwm=[]
+LEFT_FORWARD = 0
+pwm.append(    GPIO.PWM(LEFT_FORWARD_PIN, 50))
+LEFT_BACKWARD = 1
+pwm.append(    GPIO.PWM(LEFT_BACKWARD_PIN, 50))
+RIGHT_FORWARD = 2
+pwm.append(    GPIO.PWM(RIGHT_FORWARD_PIN, 50))
+RIGHT_BACKWARD = 3
+pwm.append(    GPIO.PWM(RIGHT_BACKWARD_PIN, 50))  # channel=12 frequency=50Hz
 
-LEFT_FORWARD = GPIO.PWM(LEFT_FORWARD_PIN, 50)
-LEFT_BACKWARD = GPIO.PWM(LEFT_BACKWARD_PIN, 50)
-RIGHT_FORWARD = GPIO.PWM(RIGHT_FORWARD_PIN, 50)
-RIGHT_BACKWARD = GPIO.PWM(RIGHT_BACKWARD_PIN, 50)  # channel=12 frequency=50Hz
+for p in pwm:
+    p.start(0)
 
-LEFT_BACKWARD.start(0)
 LEFT_BACKWARD_LAST = 0
-LEFT_FORWARD.start(0)
 LEFT_FORWARD_LAST = 0
-RIGHT_FORWARD.start(0)
 RIGHT_FORWARD_LAST = 0
-RIGHT_BACKWARD.start(0)
 RIGHT_BACKWARD_LAST = 0
 
 def angle():
@@ -149,115 +149,113 @@ def angle():
     return heading_angle
 
 def changePWM(pin,last, goal):
+    global pwm
 
+    print("Pin: ", pin, "Freq: ", goal)
 
-    #global pwmchange
-    #print(pin)
-    #pin.start(last)
-    #pwmchange.append(pin)
+    pwm[pin].start(0)
+    pwm[pin].ChangeDutyCycle(goal)
+
+'''    
+    global pwm
     i = 5
     if last>goal:
         i = -i
     for dc in range(last, goal, i):
-        pin.ChangeDutyCycle(dc)
+        pwm[pin].ChangeDutyCycle(dc)
         time.sleep(0.1)
         print("pwm",dc,goal)
-    del pwmchange[pwmchange.index(pin)]
-
-
-def wait_process():
-    global  pwmchange
-    while len(pwmchange)!=0:
-        print(time)
+'''
 
 def moveTank(forward_dir, side_dir):
     # értékellenörzés.
     if forward_dir > 100:
         forward_dir = 100
-
-    if forward_dir < -100:
+    elif forward_dir < -100:
         forward_dir = -100
 
     if side_dir > 100:
         side_dir = 100
-
-    if side_dir < -100:
+    elif side_dir < -100:
         side_dir = -100
-    global pool,LEFT_BACKWARD_LAST, LEFT_FORWARD, LEFT_FORWARD_LAST, RIGHT_FORWARD, RIGHT_FORWARD_LAST, RIGHT_BACKWARD, RIGHT_BACKWARD_LAST
+
+    side_dir=side_dir//2
+    forward_dir=forward_dir//2
+
+    global LEFT_BACKWARD_LAST, LEFT_FORWARD, LEFT_FORWARD_LAST, RIGHT_FORWARD, RIGHT_FORWARD_LAST, RIGHT_BACKWARD, RIGHT_BACKWARD_LAST
+    #fordulás
     if abs(forward_dir) < 10 and side_dir > 20:
         print("balra")
-        '''
-        p1 = Process(target=changePWM, args=("LEFT_FORWARD", LEFT_FORWARD_LAST, 0))
-        p1.start()
-        p2 = Process(target=changePWM, args=("RIGHT_BACKWARD", RIGHT_BACKWARD_LAST, 0))
-        p2.start()
-        p1.join()
-        p2.join()
 
-        time.sleep(0.5)
-        wait_process()
-        '''
         changePWM(LEFT_FORWARD, LEFT_FORWARD_LAST, 0)
-        LEFT_FORWARD_LAST = 0
         changePWM(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, 0)
+        LEFT_FORWARD_LAST = 0
         RIGHT_BACKWARD_LAST = 0
-        '''
-        p3 = Process(target=changePWM, args=("LEFT_BACKWARD", LEFT_BACKWARD_LAST, abs(side_dir),))
-        p3.start()
-        p4 = Process(target=changePWM, args=("RIGHT_FORWARD", RIGHT_FORWARD_LAST, abs(side_dir),))
-        p4.start()
-        p3.join()
-        p4.join()
 
-        time.sleep(0.5)
-        wait_process()
-        '''
         changePWM(LEFT_BACKWARD, LEFT_BACKWARD_LAST, abs(side_dir))
-        LEFT_BACKWARD_LAST = abs(side_dir)
         changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, abs(side_dir))
+        LEFT_BACKWARD_LAST = abs(side_dir)
         RIGHT_FORWARD_LAST = abs(side_dir)
-
-    elif abs(forward_dir) < 10 and side_dir < -20:
+    elif abs(forward_dir) < 10 and abs(side_dir) > 20:
         print("jobbra")
+
         changePWM(LEFT_BACKWARD, LEFT_BACKWARD_LAST, 0)
         changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, 0)
-
-        '''
-        p1 = Process(target=changePWM, args=("LEFT_BACKWARD", LEFT_BACKWARD_LAST, 0))
-        p1.start()
-        p2 = Process(target=changePWM, args=("RIGHT_FORWARD", RIGHT_FORWARD_LAST, 0))
-        p2.start()
-        p1.join()
-        p2.join()
-        time.sleep(0.5)
-        wait_process()
-        '''
         LEFT_BACKWARD_LAST = 0
         RIGHT_FORWARD_LAST = 0
-        '''
-        #changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, 0)
-        print("start stage 2")
-        p3 = Process(target=changePWM, args=("LEFT_FORWARD", LEFT_FORWARD_LAST, abs(side_dir),))
-        p3.start()
-        p4 = Process(target=changePWM, args=("RIGHT_BACKWARD", RIGHT_BACKWARD_LAST, abs(side_dir),))
-        p4.start()
-        p3.join()
-        p4.join()
 
-        time.sleep(0.5)
-        wait_process()
-        '''
         changePWM(LEFT_FORWARD, LEFT_FORWARD_LAST, abs(side_dir))
         changePWM(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, abs(side_dir))
         LEFT_FORWARD_LAST = abs(side_dir)
         RIGHT_BACKWARD_LAST = abs(side_dir)
-
     else:
+
+        ballra = abs(side_dir) if side_dir > 0 else 0
+        jobbra = abs(side_dir) if side_dir < 0 else 0
+
         if forward_dir > 0:
             print("elore")
 
+            changePWM(LEFT_BACKWARD, LEFT_BACKWARD_LAST, 0)
+            changePWM(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, 0)
+
+            LEFT_BACKWARD_LAST = 0
+            RIGHT_BACKWARD_LAST = 0
+
+            changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, abs(forward_dir)+ballra)
+            changePWM(LEFT_FORWARD, LEFT_FORWARD_LAST, abs(forward_dir)+jobbra)
+
+            RIGHT_FORWARD_LAST = abs(forward_dir)+ballra
+            LEFT_FORWARD_LAST = abs(forward_dir)+jobbra
+
         elif forward_dir < 0:
             print("hatra")
+            changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, 0)
+            changePWM(LEFT_FORWARD, LEFT_FORWARD_LAST, 0)
+
+            RIGHT_FORWARD_LAST = 0
+            LEFT_FORWARD_LAST = 0
+
+            changePWM(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, abs(forward_dir)+ballra)
+            changePWM(LEFT_BACKWARD, LEFT_BACKWARD_LAST, abs(forward_dir)+jobbra)
+
+            RIGHT_BACKWARD_LAST = abs(forward_dir)+ballra
+            LEFT_BACKWARD_LAST = abs(forward_dir)+jobbra
+        else:
+
+            changePWM(LEFT_BACKWARD, LEFT_BACKWARD_LAST, 0)
+            changePWM(RIGHT_BACKWARD, RIGHT_BACKWARD_LAST, 0)
+
+            LEFT_BACKWARD_LAST = 0
+            RIGHT_BACKWARD_LAST = 0
+
+            changePWM(RIGHT_FORWARD, RIGHT_FORWARD_LAST, 0)
+            changePWM(LEFT_FORWARD, LEFT_FORWARD_LAST, 0)
+
+            RIGHT_FORWARD_LAST = 0
+            LEFT_FORWARD_LAST = 0
+
+
 def start_server(path, port=9000):
     class MyHandler(BaseHTTPRequestHandler):
         def do_HEAD(self):
@@ -266,10 +264,7 @@ def start_server(path, port=9000):
             self.end_headers()
 
         def do_GET(self):
-
             self.respond({'status': 200})
-
-        #            self.respond({'status': 500})
 
         def http_temp(self, ajax, file="",isfile=True):
             s = ""
@@ -332,7 +327,6 @@ def start_server(path, port=9000):
             pass
         httpd.server_close()
         print(time.asctime(), 'Server Stops - %s:%s' % (HOST_NAME, PORT_NUMBER))
-
 
 daemon = threading.Thread(name='daemon_server',
                           target=start_server,
