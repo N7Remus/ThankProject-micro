@@ -53,6 +53,7 @@ UCE = True
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
+#Magnetométer
 # some MPU6050 Registers and their Address
 Register_A = 0  # Address of Configuration register A
 Register_B = 0x01  # Address of configuration register B
@@ -65,6 +66,12 @@ declination = -0.00669  # define declination angle of location where measurement
 pi = 3.14159265359  # define pi value
 
 address = 0x68
+
+# Gyro
+
+# Register
+power_mgmt_1 = 0x6b
+power_mgmt_2 = 0x6c
 
 
 def Magnetometer_Init():
@@ -96,8 +103,45 @@ def read_raw_data(addr):
     return value
 
 
+def read_byte(reg):
+    return bus.read_byte_data(address, reg)
+
+
+def read_word(reg):
+    h = bus.read_byte_data(address, reg)
+    l = bus.read_byte_data(address, reg + 1)
+    value = (h << 8) + l
+    return value
+
+
+def read_word_2c(reg):
+    val = read_word(reg)
+    if (val >= 0x8000):
+        return -((65535 - val) + 1)
+    else:
+        return val
+
+
+def dist(a, b):
+    return math.sqrt((a * a) + (b * b))
+
+
+def get_y_rotation(x, y, z):
+    radians = math.atan2(x, dist(y, z))
+    return -math.degrees(radians)
+
+
+def get_x_rotation(x, y, z):
+    radians = math.atan2(y, dist(x, z))
+    return math.degrees(radians)
+
+
 bus = smbus.SMBus(1)  # or bus = smbus.SMBus(0) for older version boards
 Device_Address = 0x1e  # HMC5883L magnetometer device address
+g_address = 0x68       #  Gyro
+
+# Aktivieren, um das Modul ansprechen zu koennen
+bus.write_byte_data(address, power_mgmt_1, 0)
 
 Magnetometer_Init()  # initialize HMC5883L magnetometer
 
@@ -152,6 +196,26 @@ def angle():
     heading_angle = int(heading * 180 / pi)
     return heading_angle
 
+def gyro():
+    gyroskop_xout = read_word_2c(0x43)
+    gyroskop_yout = read_word_2c(0x45)
+    gyroskop_zout = read_word_2c(0x47)
+
+    beschleunigung_xout = read_word_2c(0x3b)
+    beschleunigung_yout = read_word_2c(0x3d)
+    beschleunigung_zout = read_word_2c(0x3f)
+
+    beschleunigung_xout_skaliert = beschleunigung_xout / 16384.0
+    beschleunigung_yout_skaliert = beschleunigung_yout / 16384.0
+    beschleunigung_zout_skaliert = beschleunigung_zout / 16384.0
+
+    print(    "X Rotation: ", get_x_rotation(beschleunigung_xout_skaliert, beschleunigung_yout_skaliert,
+                                   beschleunigung_zout_skaliert)
+    )
+    print(    "Y Rotation: ", get_y_rotation(beschleunigung_xout_skaliert, beschleunigung_yout_skaliert,
+                                   beschleunigung_zout_skaliert)
+    )
+
 
 def changePWM(pin, last, goal):
     global pwm
@@ -161,17 +225,10 @@ def changePWM(pin, last, goal):
     pwm[pin].start(0)
     pwm[pin].ChangeDutyCycle(goal)
 
-
-'''    
-    global pwm
-    i = 5
-    if last>goal:
-        i = -i
-    for dc in range(last, goal, i):
-        pwm[pin].ChangeDutyCycle(dc)
-        time.sleep(0.1)
-        print("pwm",dc,goal)
-'''
+def saveSensorData(FILE,DATA):
+    #CSV vagy SQL - megolással lehetne megoldani,még nem biztos hogy mivel csináljuk ezért van függvényben.
+    with open(FILE, "a") as myFile:
+        myFile.write(DATA)
 
 
 def moveTank(forward_dir, side_dir):
@@ -308,6 +365,9 @@ def start_server(path, port=9000):
                 # van szög, van gyorsulás, ha minden igaz van minden adat az értélel letárolására, illetve visszatöltésére
                 # TODO Visszatöltés megírása.
                 heading_angle = angle()
+
+                saveSensorData("asd",heading_angle+" "+width+" "+height)
+
                 content = self.http_temp(True, "<p>Szög " +
                                          str(heading_angle) +
                                          '°</p>', False)
@@ -340,6 +400,11 @@ daemon = threading.Thread(name='daemon_server',
                           args=('.', PORT_NUMBER))
 daemon.setDaemon(True)  # Set as a daemon so it will be killed once the main thread is dead.
 daemon.start()
+
+
+
+
+
 
 try:
     time.sleep(100)
