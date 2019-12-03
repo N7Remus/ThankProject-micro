@@ -209,6 +209,25 @@ def gyro():
     beschleunigung_yout_skaliert = beschleunigung_yout / 16384.0
     beschleunigung_zout_skaliert = beschleunigung_zout / 16384.0
 
+    '''
+    gyroskop_xout+" "+gyroskop_yout+" "+gyroskop_zout+" "+
+                       beschleunigung_xout+" "+beschleunigung_xout_skaliert +" "+
+                       beschleunigung_yout+" "+beschleunigung_yout_skaliert+" "+
+                       beschleunigung_zout+" "+beschleunigung_zout_skaliert+"\n"+
+    '''
+
+    saveSensorData("gyro.txt",
+                   str(gyroskop_xout)+" "+str(gyroskop_yout)+" "+
+                   str(gyroskop_zout) + " " +
+                   str(get_x_rotation(beschleunigung_xout_skaliert, beschleunigung_yout_skaliert,
+                                    beschleunigung_zout_skaliert))
+                   + " " +
+                   str(get_y_rotation(beschleunigung_xout_skaliert, beschleunigung_yout_skaliert,
+                                    beschleunigung_zout_skaliert))
+                   + "\n"
+                   )
+
+
     print(    "X Rotation: ", get_x_rotation(beschleunigung_xout_skaliert, beschleunigung_yout_skaliert,
                                    beschleunigung_zout_skaliert)
     )
@@ -243,8 +262,8 @@ def moveTank(forward_dir, side_dir):
     elif side_dir < -100:
         side_dir = -100
 
-    side_dir = side_dir // 2
-    forward_dir = forward_dir // 2
+    side_dir = side_dir // 1
+    forward_dir = forward_dir // 1
 
     global LEFT_BACKWARD_LAST, LEFT_FORWARD, LEFT_FORWARD_LAST, RIGHT_FORWARD, RIGHT_FORWARD_LAST, RIGHT_BACKWARD, RIGHT_BACKWARD_LAST
     # fordulás
@@ -366,7 +385,7 @@ def start_server(path, port=9000):
                 # TODO Visszatöltés megírása.
                 heading_angle = angle()
 
-                saveSensorData("asd",heading_angle+" "+width+" "+height)
+                saveSensorData("asd",str(heading_angle)+" "+str(width)+" "+str(height)+"\n")
 
                 content = self.http_temp(True, "<p>Szög " +
                                          str(heading_angle) +
@@ -401,13 +420,10 @@ daemon = threading.Thread(name='daemon_server',
 daemon.setDaemon(True)  # Set as a daemon so it will be killed once the main thread is dead.
 daemon.start()
 
-
-
-
-
-
 try:
-    time.sleep(100)
+    while True:
+        gyro()
+        time.sleep(1)
     # ez a rész függetlenül fut a webszerver hívásoktól
 
 except KeyboardInterrupt:
