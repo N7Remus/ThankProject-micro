@@ -1,0 +1,83 @@
+Alkatrészek:
+
+Raspberry pi 3 b+
+
+DC 12V 8000mAh Super Rechargeable Portable Lithium - ion Battery Pack
+https://www.banggood.com/DC-12V-8000mAh-Super-Rechargeable-Protable-Lithium-ion-Battery-Pack-p-969148.html?rmmds=myorder&cur_warehouse=CN
+
+- 12v DC os akumlátorunk van -> 5v stabil dc-re alakír át
+LM2596 DC-DC Verstellbar Step Down-Schaltregler Power Supply Module 
+
+https://www.banggood.com/LM2596-DC-DC-Verstellbar-Step-Down-Schaltregler-Power-Supply-Module-p-88252.html?rmmds=myorder&cur_warehouse=CN
+
+- megjegyzés, hogy gyorsan merült -> tehát belekerült egy külsőaksim is
+
+
+https://www.banggood.com/MPU9250-Integrated-9DOF-9-Axis-Attitude-Accelerometer-Gyro-Compass-Magnetic-Field-Sensor-For-Arduino-p-1101005.html?rmmds=myorder&cur_warehouse=CN
+9DOF 9-Axis Attitude Accelerometer Gyro Compass Magnetic Field Sensor
+íránytű meg g szenzor -> zavart szed be, módosítani kell az implementációt
+
+
+https://www.banggood.com/Wholesale-Dual-H-Bridge-DC-Stepper-Motor-Drive-Controller-Board-Module-Arduino-L298N-p-42826.html?rmmds=myorder
+Geekcreit® L298N Dual H Bridge Stepper Motor Driver Board For Arduino - Vezérléshez 
+
+
+
+3V-9V DIY Shock Absorbed Smart Robot Tank Chassis Car Kit With 260 Motor For Arduino SCM- tankváz
+https://www.banggood.com/3V-9V-DIY-Shock-Absorbed-Smart-Robot-Tank-Chassis-Car-Kit-With-260-Motor-For-Arduino-SCM-p-1155264.html?rmmds=myorder
+
+Geekcreit® 3 IN 1 120pcs 10cm Male To Female Female To Female Male To Male Jumper Cable Dupont Wire For Arduino- kábelek egy része, a maradék az maradékkábel
+https://www.banggood.com/3-IN-1-120pcs-10cm-Male-To-Female-Female-To-Female-Male-To-Male-Jumper-Cable-Dupont-Wire-For-Arduino-p-1054670.html?rmmds=myorder&cur_warehouse=CN
+
+DHT11 szenzor hőmérséklet szenzor.
+
+
+**plexi az barkácslol** 
+
+
+
+
+
+tank.py elindítása : python3 tank.py
+
+Ez el fogja elindítani a webszervert.
+
+A webszerver a html_page/ mappa tartalmati szolgálja majd ki.
+html_page tartamla: 
+
+basic.html ez a manuális irányítás oldala, ahol egy virtuális joystick segítségével irányíthatjuk a tankot.
+Függőségek amiket más oldalak használnak:
+	virtualjoystick.js	
+	jquery-3.4.1.js	
+
+stat.html ez a tank.py statisztikáit fogja majd megmutatni.
+log.py ez a tank.py logjait fogja megmutatni.
+
+
+
+
+Használat
+
+
+tank
+
+1 be kell kapcsolni a tápokat, a 12 voltos-on van gomb, a másik az meg usb csatlakozású.
+# belinkelt rasberry telepítés
+
+
+A rasberry-t elérjük ssh-n:
+#itt kell hogy legyen net lehetőleg wifi
+# wifit a raspi-config segítségével beálíthatunk
+
+# gites repó lekérés
+# parancs a függőségek telepítésére...
+
+
+python3 tank.py
+Ha azt látjuk... jó
+Hibakeresést.
+
+utánna megpróbáljuk elérni a rapsberry-t ip cím alapján.
+
+http://raspberrypi.local:9000/
+elérhető telefonon / gépen...
