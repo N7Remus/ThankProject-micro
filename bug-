@@ -1,0 +1,10 @@
+https://www.raspberrypi.org/forums/viewtopic.php?t=71320
+
+
+
+szög amerre ál
+input x,y joystick.
+gyorsulás, lesz az elmozdulás.
+
+
+def loadData(file):
