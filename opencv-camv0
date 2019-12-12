@@ -11,4 +11,4 @@ def takeImage():
     img_counter += 1
 
     cam.release()
-
+takeImage()
