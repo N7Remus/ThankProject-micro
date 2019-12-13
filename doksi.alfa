@@ -46,6 +46,13 @@ A hőmérséklet mérésének tartománya 0°C-tól 50°C-ig terjed, ennek a pon
 A páratartalom mérésének tartománya 20%-90%RH, pontosságát tekintve pedig ±5.0%RH.
 Az eszköz válasz ideje 5s alatt, mérete pedig 2.3cm x 1.2cm x 0.5cm.
 
+A tankot elláttuk egy Logitech QuickCam C500-as típusú webkamerával is elláttuk, hogy 
+a tank kezelője könnyebben és nagyobb távolságból is hatékonyan tudja irányítani az eszközt.
+A kamera nem képes sem digitális, sem pedig optikai zoomra, azonban beépített mikrofonnal 
+rendelkezik, így akár a tank irányítása alatt könnyebben oda tudunk figyelni a környezetére.
+A kamera maximális képfrissítése 30fps, felbontása pedig 1,3 megapixel azaz
+egészen pontosan 1280 x 1024-es videófelbontásra képes.
+
 Vezetékekből a következő névre hallgató típust használtuk:"Geekcreit? 3 IN 1 120pcs 10cm 
 Male To Female Female To Female Male To Male Jumper Cable".
 
