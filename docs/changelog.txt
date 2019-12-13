@@ -1,0 +1,2 @@
+áttértünk a flask webszerver megoldására
+grafikonábrázoláshot a plotly.graph_objects et szeretnénk hasznélni

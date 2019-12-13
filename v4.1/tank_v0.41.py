@@ -14,6 +14,178 @@ import imutils
 import time
 import cv2
 import os.path
+# Raspberry specifikus modulok
+try:
+    import RPi.GPIO as GPIO
+except RuntimeError:
+    print(
+        "Error importing RPi.GPIO!  This is probably because you need superuser privileges.  You can achieve this by using 'sudo' to run your script")
+import smbus  # import SMBus module of I2C
+# https://sourceforge.net/p/raspberry-gpio-python/wiki/PWM/ example alajpján
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+#Magnetométer
+# some MPU6050 Registers and their Address
+Register_A = 0  # Address of Configuration register A
+Register_B = 0x01  # Address of configuration register B
+Register_mode = 0x02  # Address of mode register
+
+X_axis_H = 0x03  # Address of X-axis MSB data register
+Z_axis_H = 0x05  # Address of Z-axis MSB data register
+Y_axis_H = 0x07  # Address of Y-axis MSB data register
+declination = -0.00669  # define declination angle of location where measurement going to be done
+pi = 3.14159265359  # define pi value
+
+address = 0x68
+
+# Gyro
+
+# Register
+power_mgmt_1 = 0x6b
+power_mgmt_2 = 0x6c
+
+
+def Magnetometer_Init():
+    bus.write_byte_data(address, 0x37, 0x02)
+    bus.write_byte_data(address, 0x6A, 0x00)
+    bus.write_byte_data(address, 0x6B, 0x00)
+
+    # write to Configuration Register A
+    bus.write_byte_data(Device_Address, Register_A, 0x70)
+
+    # Write to Configuration Register B for gain
+    bus.write_byte_data(Device_Address, Register_B, 0xa0)
+
+    # Write to mode Register for selecting mode
+    bus.write_byte_data(Device_Address, Register_mode, 0)
+
+
+def read_raw_data(addr):
+    # Read raw 16-bit value
+    high = bus.read_byte_data(Device_Address, addr)
+    low = bus.read_byte_data(Device_Address, addr + 1)
+
+    # concatenate higher and lower value
+    value = ((high << 8) | low)
+
+    # to get signed value from module
+    if (value > 32768):
+        value = value - 65536
+    return value
+
+
+def read_byte(reg):
+    return bus.read_byte_data(address, reg)
+
+
+def read_word(reg):
+    h = bus.read_byte_data(address, reg)
+    l = bus.read_byte_data(address, reg + 1)
+    value = (h << 8) + l
+    return value
+
+
+def read_word_2c(reg):
+    val = read_word(reg)
+    if (val >= 0x8000):
+        return -((65535 - val) + 1)
+    else:
+        return val
+
+
+def dist(a, b):
+    return math.sqrt((a * a) + (b * b))
+
+
+def get_y_rotation(x, y, z):
+    radians = math.atan2(x, dist(y, z))
+    return -math.degrees(radians)
+
+
+def get_x_rotation(x, y, z):
+    radians = math.atan2(y, dist(x, z))
+    return math.degrees(radians)
+
+
+bus = smbus.SMBus(1)  # or bus = smbus.SMBus(0) for older version boards
+Device_Address = 0x1e  # HMC5883L magnetometer device address
+g_address = 0x68       #  Gyro
+
+# Aktivieren, um das Modul ansprechen zu koennen
+bus.write_byte_data(address, power_mgmt_1, 0)
+
+Magnetometer_Init()  # initialize HMC5883L magnetometer
+
+# CONTROLS
+#LEFT_FORWARD_PIN - lf
+LF_PIN = 13
+LB_PIN = 19
+RF_PIN = 18
+RB_PIN = 12
+
+pwm = []
+
+GPIO.setup(LF_PIN, GPIO.OUT) # jobbra kanyarodáshoz
+GPIO.setup(LB_PIN, GPIO.OUT)
+GPIO.setup(RF_PIN, GPIO.OUT)
+GPIO.setup(RB_PIN, GPIO.OUT)
+
+pwm.append(GPIO.PWM(LF_PIN, 50))
+pwm.append(GPIO.PWM(LB_PIN, 50))
+pwm.append(GPIO.PWM(RF_PIN, 50))
+pwm.append(GPIO.PWM(RB_PIN, 50))
+
+def gyro():
+    gyroskop_xout = read_word_2c(0x43)
+    gyroskop_yout = read_word_2c(0x45)
+    gyroskop_zout = read_word_2c(0x47)
+
+    beschleunigung_xout = read_word_2c(0x3b)
+    beschleunigung_yout = read_word_2c(0x3d)
+    beschleunigung_zout = read_word_2c(0x3f)
+
+    beschleunigung_xout_skaliert = beschleunigung_xout / 16384.0
+    beschleunigung_yout_skaliert = beschleunigung_yout / 16384.0
+    beschleunigung_zout_skaliert = beschleunigung_zout / 16384.0
+
+    '''
+    gyroskop_xout+" "+gyroskop_yout+" "+gyroskop_zout+" "+
+                       beschleunigung_xout+" "+beschleunigung_xout_skaliert +" "+
+                       beschleunigung_yout+" "+beschleunigung_yout_skaliert+" "+
+                       beschleunigung_zout+" "+beschleunigung_zout_skaliert+"\n"+
+    
+
+    saveSensorData("gyro.txt",
+                   str(gyroskop_xout)+" "+str(gyroskop_yout)+" "+
+                   str(gyroskop_zout) + " " +
+                   str(get_x_rotation(beschleunigung_xout_skaliert, beschleunigung_yout_skaliert,
+                                    beschleunigung_zout_skaliert))
+                   + " " +
+                   str(get_y_rotation(beschleunigung_xout_skaliert, beschleunigung_yout_skaliert,
+                                    beschleunigung_zout_skaliert))
+                   + "\n"
+                   )
+
+    '''
+    print(    "X Rotation: ", get_x_rotation(beschleunigung_xout_skaliert, beschleunigung_yout_skaliert,
+                                   beschleunigung_zout_skaliert)
+    )
+    print(    "Y Rotation: ", get_y_rotation(beschleunigung_xout_skaliert, beschleunigung_yout_skaliert,
+                                   beschleunigung_zout_skaliert)
+    )
+
+def changePWM(pin,  goal):
+    global pwm
+
+    print("Pin: ", pin, "Freq: ", goal)
+
+    pwm[pin].start(0)
+    pwm[pin].ChangeDutyCycle(goal)
+
+
+# USB CAMERA
+
 # initialize the output frame and a lock used to ensure thread-safe
 # exchanges of the output frames (useful for multiple browsers/tabs
 # are viewing tthe stream)
@@ -109,6 +281,11 @@ def ajax():
     width = request.args.get('w')
     height = request.args.get('h')
 
+    if width<0:
+        left
+
+    changePWM()
+
     content = width
     mimetype="text/html"
     return Response(content, mimetype=mimetype)
@@ -154,3 +331,8 @@ if __name__ == '__main__':
 
 # release the video stream pointer
 vs.stop()
+
+for p in pwm:
+    p.stop()
+
+GPIO.cleanup()
