@@ -1,3 +1,4 @@
+# coding=utf-8
 # USAGE
 # python webstreaming.py --ip 0.0.0.0 --port 8000
 
@@ -278,15 +279,47 @@ def video_feed():
 @app.route("/ajax/")
 def ajax():
     # here we want to get the value of user (i.e. ?user=some-value)
-    width = request.args.get('w')
-    height = request.args.get('h')
+    x = request.args.get('w')
+    y = request.args.get('h')
 
-    if width<0:
-        left
+    left=0
+    right=0
+    # akarom forgatni a tankot?
+    # frekvenciátállítok
+    if x<-10:
+        # ballra akar menni
+        left=abs(x)
+        right=100-abs(x)
+    elif x == 0:
+        right=0
+        left = 0
+    elif x>10:
+        right=abs(x)
+        left = 100-abs(x)
+    # hátra akar menni alar menni
+    # ezzel váltom a pint
+    if y<0:
+        # Aktív
+        p1=0
+        p2=2
+        # OFF
+        p3 = 1
+        p4 = 3
+    elif y==0:
+        changePWM(0,0)
+        changePWM(1, 0)
+        changePWM(2, 0)
+        changePWM(3, 0)
+    else:
+        p1=1
+        p2=3
+        # OFF
+        p3 = 0
+        p4 = 2
+    changePWM(p1,left)
+    changePWM(p2, right)
 
-    changePWM()
-
-    content = width
+    content = str(x)+"----"+str(y)
     mimetype="text/html"
     return Response(content, mimetype=mimetype)
 
