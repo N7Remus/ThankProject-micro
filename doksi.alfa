@@ -1,57 +1,65 @@
 Fejlesztői dokumentáció
+
+Funkció:
+
+A tank egy felderítési célokra alkalmas, vezeték nélküli vezérléssel ellátott eszköz, 
+amely többek között képes az adott helyszínen hőmérséklet illetve páratartalom 
+mérést végrehajtani, majd a mért adatokat továbbítja a kezelő számára.
+
 Alkatrészek:
 
 A projektünk során mi egy "Raspberry pi 3 b+"-t alkalmaztunk.
+
 Az áramellátásért egy 8000mAh-os, 12V-os lítiumion-akkumulátor felel.
+Az akkumulátor méretét tekintve 127 x 65 x 23mm. A kimeneti feszültsége 10.8 - 12.6 DC, a kimeneti 
+áramerőssége pedig 1 - 2.4A.
 A 12V-ot átalakítottuk 5V-ra, egy LM2596-os típusú léptető modul segítségével. Erre a lépésre azért volt szükség,
 mivel a tankot hajtó motoroknak elengedhetetlen hogy 12V-ról üzemeljenek, ugyanakkor a mikroszámítógép
 üzemeltetéséhez csupán 5V-ra van szükségünk. Tehát ez azt eredményezi, hogy az akkumulátorból
 indul egy 12V-os ág a motorhoz, illetve egy 12-ből 5V-ra átalakított ág a mikroszámítógépbe.
 Az eddig említett eszközökkel felmerült egy olyan probléma, hogy hogy az akkumulátor az elvártnál 
 rövidebb időtartam alatt lemerült. Ebből az okból kifolyólag úgy döntöttünk, hogy 
+
 a tankot ellátjuk még egy további külső akkumulátorral is. 
 //aksi paraméterei
+
 A vezérléshez egy Geekcreit® L298N típusú modult használtunk.
-A tankhoz mindenképp szükségünk volt egy riánytűre és egy gyro szenzorra, ezeket a feladatokat
+Ez a modul méreteit tekintve 43 x 43 x 27mm.
+A tankhoz mindenképp szükségünk volt egy iránytűre és egy gyro szenzorra, ezeket a feladatokat
 egy MPU9250-as egység látja el. A szenzor elhelyezésekor olyan problémát tapasztaltunk,
 hogy valamilyen külső behatás következtében zavar keletkezett a modul működésében.
-Ezért hosszas tesztelések untán arra a következtetésre jutottunk, hogy a szenzort
+Ezért hosszas tesztelések után arra a következtetésre jutottunk, hogy a szenzort
 a tank elejében, lehetőség szerint minél feljebb lenne optimális elhelyezni.
 Ilyen módon sikeresen ki lehet küszöbölni a külső zavarokat.
 
 A tank vázának egy "3V-9V DIY Shock Absorbed Smart Robot Tank Chassis Car Kit"-et használtunk,
 ebbe lettek beleépítve a már korábban említett komponensek. A tank vázához gyárilag tartozott két darab 
 260-as motor. Mivel ez a váz eredeti állapotában felül teljesen nyitott, így készíteni kellett hozzá
-egy plexi lemezt amyely védi a belső alkatrészeket, illetve ily módon több helyet is biztosít,
-mivel így már a tank tetején is lehetővé vált bizonyos alkatrészeket elhelyezni.
+egy műanyag plexi lemezt amely védi a belső alkatrészeket, illetve ily módon több helyet is biztosít,
+mivel így már a tank tetején is lehetővé vált bizonyos alkatrészek elhelyezése.
 A tank tetején kapott helyet például maga a mikroszámítógép, a már korábban említett két akkumulátor,
 továbbá a ár szintén tárgyalt MPU9250-es modul.
+
 A tank belsejében található még egy hőmérséklet mérő szenzor is, melyről korábban még nem esett szó.
-Ez egy DHT11-es típusú hőmérséklet mérő szenzor.
+Ez tulajdonképpen egy DHT11-es típusú hőmérséklet és páratartalom mérő szenzor.
+A hőmérséklet mérésének tartománya 0°C-tól 50°C-ig terjed, ennek a pontossága pedig ±2.0°C.
+A páratartalom mérésének tartománya 20%-90%RH, pontosságát tekintve pedig ±5.0%RH.
+Az eszköz válasz ideje 5s alatt, mérete pedig 2.3cm x 1.2cm x 0.5cm.
+
+Vezetékekből a következő névre hallgató típust használtuk:"Geekcreit? 3 IN 1 120pcs 10cm 
+Male To Female Female To Female Male To Male Jumper Cable".
 
 
 
 
 
-
-Geekcreit® 3 IN 1 120pcs 10cm Male To Female Female To Female Male To Male Jumper Cable Dupont Wire For Arduino- kábelek egy része, a maradék az maradékkábel
-https://www.banggood.com/3-IN-1-120pcs-10cm-Male-To-Female-Female-To-Female-Male-To-Male-Jumper-Cable-Dupont-Wire-For-Arduino-p-1054670.html?rmmds=myorder&cur_warehouse=CN
-
-
-
-
-tank.py elindítása : python3 tank.py
-
-Ez el fogja elindítani a webszervert.
-
-A webszerver a html_page/ mappa tartalmati szolgálja majd ki.
-html_page tartamla: 
-
+A tank.py elindítása a python3 tank.py-n keresztül történik. Ez el fog indítani egy
+webszervert, majd a webszervert a html_page/ mappa fogja majd kiszolgálni.
+A html_page tartamla a következő:
 basic.html ez a manuális irányítás oldala, ahol egy virtuális joystick segítségével irányíthatjuk a tankot.
 Függőségek amiket más oldalak használnak:
 	virtualjoystick.js	
 	jquery-3.4.1.js	
-
 stat.html ez a tank.py statisztikáit fogja majd megmutatni.
 log.py ez a tank.py logjait fogja megmutatni.
 
