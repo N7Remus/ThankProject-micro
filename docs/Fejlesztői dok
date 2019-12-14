@@ -3,7 +3,7 @@ Funkció:
 A tank egy felderítési célokra alkalmas, vezeték nélküli vezérléssel ellátott eszköz, 
 amely többek között képes az adott helyszínen hőmérséklet illetve páratartalom 
 mérést végrehajtani, majd a mért adatokat továbbítja a kezelő számára.
-
+A mért adatokról diagramot is készít, majd ezt meg is jeleníti egy webes felületen keresztül.
 
 
 
