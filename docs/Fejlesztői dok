@@ -4,6 +4,9 @@ A tank egy felderítési célokra alkalmas, vezeték nélküli vezérléssel ell
 amely többek között képes az adott helyszínen hőmérséklet illetve páratartalom 
 mérést végrehajtani, majd a mért adatokat továbbítja a kezelő számára.
 
+
+
+
 Alkatrészek:
 
 A projektünk során mi egy "Raspberry pi 3 b+"-t használtunk. 
@@ -71,6 +74,14 @@ Male To Female Female To Female Male To Male Jumper Cable".
 
 
 
+Alkatrészek elhelyezése:
+
+//coming soon
+
+
+
+
+Egyéb:
 
 A tank.py elindítása a python3 tank.py-n keresztül történik. Ez el fog indítani egy
 webszervert, majd a webszervert a html_page/ mappa fogja majd kiszolgálni.
