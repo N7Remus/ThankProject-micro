@@ -1,0 +1,22 @@
+tank
+
+1 be kell kapcsolni a tápokat, a 12 voltos-on van gomb, a másik az meg usb csatlakozású.
+# belinkelt rasberry telepítés
+
+
+A rasberry-t elérjük ssh-n:
+#itt kell hogy legyen net lehetőleg wifi
+# wifit a raspi-config segítségével beálíthatunk
+
+# gites repó lekérés
+# parancs a függőségek telepítésére...
+
+
+python3 tank.py
+Ha azt látjuk... jó
+Hibakeresést.
+
+utánna megpróbáljuk elérni a rapsberry-t ip cím alapján.
+
+http://raspberrypi.local:9000/
+elérhető telefonon / gépen...
