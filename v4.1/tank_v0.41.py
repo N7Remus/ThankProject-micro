@@ -12,6 +12,7 @@ import threading
 import argparse
 import datetime
 import imutils
+import math
 import time
 import cv2
 import os.path
@@ -108,6 +109,28 @@ def get_x_rotation(x, y, z):
     radians = math.atan2(y, dist(x, z))
     return math.degrees(radians)
 
+def angle():
+    # magnetométer infója
+    # Read Accelerometer raw value
+    x = read_raw_data(X_axis_H)
+    z = read_raw_data(Z_axis_H)
+    y = read_raw_data(Y_axis_H)
+
+    print(x, y, z)
+
+    heading = math.atan2(y, x) + declination
+
+    # Due to declination check for >360 degree
+    if (heading > 2 * pi):
+        heading = heading - 2 * pi
+
+    # check for sign
+    if (heading < 0):
+        heading = heading + 2 * pi
+
+    # convert into angle
+    heading_angle = int(heading * 180 / pi)
+    return heading_angle
 
 bus = smbus.SMBus(1)  # or bus = smbus.SMBus(0) for older version boards
 Device_Address = 0x1e  # HMC5883L magnetometer device address
@@ -281,7 +304,8 @@ def ajax():
     # here we want to get the value of user (i.e. ?user=some-value)
     x = request.args.get('w')
     y = request.args.get('h')
-
+    x = int(float(x))
+    y = int(float(y))
     left=0
     right=0
     # akarom forgatni a tankot?
@@ -305,6 +329,12 @@ def ajax():
         # OFF
         p3 = 1
         p4 = 3
+        changePWM(p3, left)
+        changePWM(p4, right)
+
+        changePWM(p1, left)
+        changePWM(p2, right)
+
     elif y==0:
         changePWM(0,0)
         changePWM(1, 0)
@@ -316,10 +346,14 @@ def ajax():
         # OFF
         p3 = 0
         p4 = 2
-    changePWM(p1,left)
-    changePWM(p2, right)
+        changePWM(p3, left)
+        changePWM(p4, right)
 
-    content = str(x)+"----"+str(y)
+        changePWM(p1,left)
+        changePWM(p2, right)
+
+    content = "<h1>"+str(x)+":"+str(y)+"</h1>"
+    content+="<h2>"+str(angle())+"</h2>"
     mimetype="text/html"
     return Response(content, mimetype=mimetype)
 
