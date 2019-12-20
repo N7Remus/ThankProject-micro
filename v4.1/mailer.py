@@ -3,7 +3,7 @@ import smtplib, ssl
 smtp_server = "smtp.gmail.com"
 port = 587  # For starttls
 sender_email = "tankdatatest@gmail.com"
-password = "igenigen"
+password = ""
 #https://realpython.com/python-send-email/
 
 # Create a secure SSL context
