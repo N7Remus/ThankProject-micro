@@ -81,6 +81,38 @@ Alkatrészek elhelyezése:
 
 
 
+Importált modulok a programkódban:
+
+	time:
+		Ez a modul különböző időfüggő feladatok ellátásáért felel. Habár ez a modul
+		mindig elérhető, mégsem minden funkciója érhető el az összes platformon.
+		
+	datetime:
+		Ez a modul a dátumok és idő kezeléséért felelős.
+		
+	threading:
+		Ennek a modulnak a használata engedélyezi a programnak hogy különböző feladatokat egyidejűleg is 
+		képes legyen futtatni ugyan abban a folyamattérben.
+		
+	argparse:
+		Az argparse modul automatikusan létrehoz különböző üzeneteket a felhasználó
+		számára, amennyiben érvénytelen paramétert ad meg a programnak.
+	
+	Egyéb importált modulok:
+		imutils, cv2, os.path
+
+
+Programkód:
+
+	A kamera elindítása:
+		vs = VideoStream(src=0).start()
+		time.sleep(2.0)
+	
+	
+
+
+
+
 Egyéb:
 
 A tank.py elindítása a python3 tank.py-n keresztül történik. Ez el fog indítani egy
