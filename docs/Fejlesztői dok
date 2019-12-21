@@ -104,10 +104,55 @@ Importált modulok a programkódban:
 
 Programkód:
 
-	A kamera elindítása:
+	új képkocka létrehozása és zárolása amíg az első folyamatban van:
+		outputFrame = None
+		lock = threading.Lock()
+		
+	flask objektum létrehozása:
+		app = Flask(__name__)
+	
+	video közvetítés létrehozása és kamera szenzor engedélyezése:
 		vs = VideoStream(src=0).start()
 		time.sleep(2.0)
+		
+	visszaadja a render sablont:
+		return render_template("basic.html")
+		
+	a globális referenciákat beleteszi a video közvetítésbe, kimeneti képkockába és a zároló változóba:
+		global vs, outputFrame, lock
+		
+	kiolvassa a következő képkockát, majd újra méretezi, beszürkíti és elhomályosítja a képkockát :
+		while True:
+			frame = vs.read()
+        		frame = imutils.resize(frame, width=400)
+
+        		with lock:
+            		outputFrame = frame.copy()
+			
+	hozzáadja a globális referenciát a kimeneti képkockához és zárolja a változókat:
+		global outputFrame, lock
+		
+	várakozik amíg a zároló meg nem kapta, ellenőrzi hogy elérhető-e a kimeneti képkocka, ellenkező esetben továbbugrik:
+		while True:
+			with lock:
+				if outputFrame is None:
+                			continue
+				#képkocka kódolása JPEG formátumban
+				(flag, encodedImage) = cv2.imencode(".jpg", outputFrame)
+				
+				#ellenőrzi hogy sikeres volt-e a kódolás
+            			if not flag:
+               		 		continue
 	
+	mozgásérzékelés indítása:
+		t = threading.Thread(target=detect_motion, args=(
+       			args["frame_count"],))
+    		t.daemon = True
+    		t.start()
+		
+	flask alkalmazás indítása:
+		app.run(host=args["ip"], port=args["port"], debug=True,
+            		threaded=True, use_reloader=False)
 	
 
 
