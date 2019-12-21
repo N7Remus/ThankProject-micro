@@ -2,6 +2,7 @@
 # python webstreaming.py --ip 0.0.0.0 --port 8000
 
 # import the necessary packages
+# a szükséges modulok importálása              //new
 from imutils.video import VideoStream
 from flask import Response
 from flask import Flask
@@ -17,15 +18,18 @@ import os.path
 # initialize the output frame and a lock used to ensure thread-safe
 # exchanges of the output frames (useful for multiple browsers/tabs
 # are viewing tthe stream)
+#új képkocka létrehozása és zárolása amíg az első folyamatban van              //new
 outputFrame = None
 lock = threading.Lock()
 
 # initialize a flask object
+#flask objektum létrehozása              //new
 app = Flask(__name__)
 
 # initialize the video stream and allow the camera sensor to
 # warmup
 # vs = VideoStream(usePiCamera=1).start()
+#video közvetítés létrehozása és kamera szenzor engedélyezése              //new
 vs = VideoStream(src=0).start()
 time.sleep(2.0)
 
@@ -49,6 +53,7 @@ def get_file(filename):  # pragma: no cover
 @app.route("/")
 def index():
     # return the rendered template
+    # visszaadja a render sablont              //new
     #return render_template("index.html")
     #return render_template("joystick.html")
     return render_template("basic.html")
@@ -57,13 +62,18 @@ def index():
 def detect_motion(frameCount):
     # grab global references to the video stream, output frame, and
     # lock variables
+    # a globális referenciákat beleteszi a video közvetítésbe, kimeneti képkockába              //new
+    # és a zároló változóba              //new
     global vs, outputFrame, lock
 
 
     # loop over frames from the video stream
+    #ciklust készít a képkockákból              //new
     while True:
         # read the next frame from the video stream, resize it,
+        #kiolvassa a következő képkockát a videóból, majd újra méretezi              //new
         # convert the frame to grayscale, and blur it
+        #beszürkíti és elhomályosítja a képkockát              //new
         frame = vs.read()
         frame = imutils.resize(frame, width=400)
 
@@ -73,21 +83,28 @@ def detect_motion(frameCount):
 
 def generate():
     # grab global references to the output frame and lock variables
+    #hozzáadja a globális referenciát a kimeneti képkockához és zárolja a változókat              //new
     global outputFrame, lock
 
     # loop over frames from the output stream
+    #ciklust készít a kimeneti képkockából              //new
     while True:
         # wait until the lock is acquired
+        #várakozik amíg a zároló meg nem kapta              //new
         with lock:
             # check if the output frame is available, otherwise skip
+            #ellenőrzi hogy elérhető-e a kimeneti képkocka              //new
+            #ellenkező esetben továbbugrik              //new
             # the iteration of the loop
             if outputFrame is None:
                 continue
 
             # encode the frame in JPEG format
+            #képkocka kódolása JPEG formátumban              //new
             (flag, encodedImage) = cv2.imencode(".jpg", outputFrame)
 
             # ensure the frame was successfully encoded
+            #ellenőrzi hogy sikeres volt-e a kódolás              //new
             if not flag:
                 continue
 
@@ -143,12 +160,14 @@ if __name__ == '__main__':
     args = vars(ap.parse_args())
 
     # start a thread that will perform motion detection
+    #mozgásérzékelés indítása              //new
     t = threading.Thread(target=detect_motion, args=(
         args["frame_count"],))
     t.daemon = True
     t.start()
 
     # start the flask app
+    #flask alkalmazás indítása              //new
     app.run(host=args["ip"], port=args["port"], debug=True,
             threaded=True, use_reloader=False)
 
