@@ -37,6 +37,20 @@ LB_PIN = 19
 RF_PIN = 18
 RB_PIN = 12
 
+# Ultrasonic
+GPIO_TRIGGER = 23
+GPIO_ECHO = 24
+
+# set GPIO direction (IN / OUT)
+GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
+GPIO.setup(GPIO_ECHO, GPIO.IN)
+# ultrasonic szenzor
+dist = 0
+# hőmérséklet
+temp = 0
+# páratartalom
+hum = 0
+
 pwm = []
 
 GPIO.setup(LF_PIN, GPIO.OUT)  # jobbra kanyarodáshoz
@@ -48,34 +62,80 @@ pwm.append(GPIO.PWM(LF_PIN, 50))
 pwm.append(GPIO.PWM(LB_PIN, 50))
 pwm.append(GPIO.PWM(RF_PIN, 50))
 pwm.append(GPIO.PWM(RB_PIN, 50))
-DHT_sensor = Adafruit_DHT.DHT11
 
+
+# wait_for_ajax = 100 # x ajax kérés után kárjök le a dht szenzort, mivel egyébként lassítja
+def distance():
+    global dist
+    # set Trigger to HIGH
+    GPIO.output(GPIO_TRIGGER, True)
+
+    # set Trigger after 0.01ms to LOW
+    time.sleep(0.00001)
+    GPIO.output(GPIO_TRIGGER, False)
+
+    StartTime = time.time()
+    StopTime = time.time()
+
+    # save StartTime
+    while GPIO.input(GPIO_ECHO) == 0:
+        StartTime = time.time()
+
+    # save time of arrival
+    while GPIO.input(GPIO_ECHO) == 1:
+        StopTime = time.time()
+
+    # time difference between start and arrival
+    TimeElapsed = StopTime - StartTime
+    # multiply with the sonic speed (34300 cm/s)
+    # and divide by 2, because there and back
+    distance = (TimeElapsed * 34300) / 2
+
+    dist = int(distance)
 
 def DHT11_read():
     # Érzékelő típusának beállítása : DHT11,DHT22 vagy AM2302
-    global DHT_sensor
     # A szenzorunk a következő GPIO-ra van kötve:
+    global temp, hum
     gpio = 17
 
     # A read_retry eljárást használjuk. Ez akár 15x is megpróbálja kiolvasni az érzékelőből az adatot (és minden olvasás előtt 2 másodpercet vár).
-    humidity, temperature = Adafruit_DHT.read_retry(DHT_sensor, gpio)
-
+    # humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, gpio)
+    humidity, temperature = Adafruit_DHT.read(Adafruit_DHT.DHT11, gpio)
     # A DHT11 kiolvasása nagyon érzékeny az időzítésre és a Pi alkalmanként
     # nem tud helyes értéket kiolvasni. Ezért megnézzük, hogy helyesek-e a kiolvasott értékek.
     if humidity is not None and temperature is not None:
-        return temperature, humidity
+        temp = temperature
+        hum = humidity
     else:
         return "", ""
 
 
+class mySensors(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.board = 1
+
+    def run(self):
+        while True:
+            distance()
+            time.sleep(1)
+            DHT11_read()
+            time.sleep(1)
+        pass
+
+
+sensors = mySensors()
+
+
 def changePWM(pin, goal):
     global pwm
-    holdback = 0.2
+    holdback = 0.5
 
     print("Pin: ", pin, "Freq: ", int(goal * holdback))
 
     pwm[pin].start(0)
-    pwm[pin].ChangeDutyCycle(goal)
+    pwm[pin].ChangeDutyCycle(int(goal * holdback))
 
 
 # USB CAMERA
@@ -226,10 +286,10 @@ def ajax():
         changePWM(p1, left)
         changePWM(p2, right)
 
-    content = "<h2>" + str(x) + ":" + str(y) + "</h2>"
-    temp, h = DHT11_read()
-    content += "<h2>" + str(temp) + str(h) + "</h2>"
-
+    content = "<h2>Inputok(x/y) : " + str(x) + ":" + str(y) + "</h2>"
+    # DHT11_read()
+    content += "<h2>Páratartalom / Hőmérséklet" + str(hum) + " ; " + str(temp) + "</h2>"
+    content += "<h2>Távolság : " + str(dist)  +" Valós: "+str(dist-12) + "</h2>"
     # content += "<h2>Angle : " + str(angle()) + "</h2>"
     # content += gyro()
 
@@ -271,6 +331,7 @@ if __name__ == '__main__':
     t.start()
 
     # start the flask app
+    sensors.start()
     app.run(host=args["ip"], port=args["port"], debug=True,
             threaded=True, use_reloader=False)
 
