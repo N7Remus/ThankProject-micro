@@ -17,6 +17,7 @@ import time
 import cv2
 import os.path
 import Adafruit_DHT
+
 # Raspberry specifikus modulok
 try:
     import RPi.GPIO as GPIO
@@ -28,8 +29,6 @@ import smbus  # import SMBus module of I2C
 # https://sourceforge.net/p/raspberry-gpio-python/wiki/PWM/ example alajpján
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-
-
 
 # CONTROLS
 # LEFT_FORWARD_PIN - lf
@@ -51,10 +50,10 @@ pwm.append(GPIO.PWM(RF_PIN, 50))
 pwm.append(GPIO.PWM(RB_PIN, 50))
 DHT_sensor = Adafruit_DHT.DHT11
 
+
 def DHT11_read():
     # Érzékelő típusának beállítása : DHT11,DHT22 vagy AM2302
-
-
+    global DHT_sensor
     # A szenzorunk a következő GPIO-ra van kötve:
     gpio = 17
 
@@ -227,10 +226,15 @@ def ajax():
         changePWM(p1, left)
         changePWM(p2, right)
 
-    content = "<h1>" + str(x) + ":" + str(y) + "</h1>"
-    #content += "<h2>Angle : " + str(angle()) + "</h2>"
-    #content += gyro()
+    content = "<h2>" + str(x) + ":" + str(y) + "</h2>"
+    temp, h = DHT11_read()
+    content += "<h2>" + str(temp) + str(h) + "</h2>"
+
+    # content += "<h2>Angle : " + str(angle()) + "</h2>"
+    # content += gyro()
+
     mimetype = "text/html"
+
     return Response(content, mimetype=mimetype)
 
 
