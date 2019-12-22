@@ -6,7 +6,7 @@ import smbus  # import SMBus module of I2C
 from time import sleep  # import
 
 # some MPU6050 Registers and their Address
-Device_Address = 0x1e  # HMC5883L magnetometer device address
+#Device_Address = 0x1e  # HMC5883L magnetometer device address
 
 PWR_MGMT_1 = 0x6B
 SMPLRT_DIV = 0x19
