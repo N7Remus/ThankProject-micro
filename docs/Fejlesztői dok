@@ -106,6 +106,22 @@ Importált modulok a programkódban:
 
 
 Programkód:
+	Érzékelő típusának beállítása : DHT11,DHT22 vagy AM2302
+	A szenzorunk a következő GPIO-ra van kötve:
+		global temp, hum
+    		gpio = 17
+	
+	A read_retry eljárást használjuk. 
+	Ez akár 15x is megpróbálja kiolvasni az érzékelőből az adatot (és minden olvasás előtt 2 másodpercet vár):
+		ity, temperature = Adafruit_DHT.read(Adafruit_DHT.DHT11, gpio)
+		
+	HT11 kiolvasása nagyon érzékeny az időzítésre és a Pi alkalmanként
+    	nem tud helyes értéket kiolvasni. Ezért megnézzük, hogy helyesek-e a kiolvasott értékek:
+		if humidity is not None and temperature is not None:
+        		temp = temperature
+        		hum = humidity
+    		else:
+        		return "", ""
 
 	új képkocka létrehozása és zárolása amíg az első folyamatban van:
 		outputFrame = None
@@ -146,6 +162,16 @@ Programkód:
 				# ellenőrzi hogy sikeres volt-e a kódolás:
             			if not flag:
                		 		continue
+	
+	Inputok kijelzése:
+    		content = "<h2>Inputok(x/y) : " + str(x) + " : " + str(y) + "</h2>"
+    		# DHT11 (Hőfok és páratartalom szenzor) adatai:
+    		content += "<h2>Páratartalom / Hőmérséklet : " + str(hum) + " ; " + str(temp) + "</h2>"
+    		# SR04 (Ultrahangos távolságszenzor) adatai:
+    		content += "<h2>Távolság : " + str(dist) + " Valós: " + str(dist - 9) + "</h2>"
+    		# MPU 6050:
+    		content += "<h2>Gyorsulás : " + str(Ax) + " " + str(Ay) + " " + str(Az) + "</h2>"
+    		content += "<h2>Helyzet : " + str(Gx) + " " + str(Gy) + " " + str(Gz) + "</h2>"
 	
 	mozgásérzékelés indítása:
 		t = threading.Thread(target=detect_motion, args=(
