@@ -4,6 +4,7 @@ A tank egy felderítési célokra alkalmas, vezeték nélküli vezérléssel ell
 amely többek között képes az adott helyszínen hőmérséklet illetve páratartalom 
 mérést végrehajtani, majd a mért adatokat továbbítja a kezelő számára.
 A mért adatokról diagramot is készít, majd ezt meg is jeleníti egy webes felületen keresztül.
+A tank, a kezelő által megtett útvonalat szintén megjeleníti ugyan azon webes felületen kersztül.
 
 
 
@@ -46,6 +47,8 @@ hogy valamilyen külső behatás következtében zavar keletkezett a modul műk�
 Ezért hosszas tesztelések után arra a következtetésre jutottunk, hogy a szenzort
 a tank elejében, lehetőség szerint minél feljebb lenne optimális elhelyezni.
 Ilyen módon sikeresen ki lehet küszöbölni a külső zavarokat.
+// meghibásodás
+// két új szenzor beszerzése
 
 A tank vázának egy "3V-9V DIY Shock Absorbed Smart Robot Tank Chassis Car Kit"-et használtunk,
 ebbe lettek beleépítve a már korábban említett komponensek. A tank vázához gyárilag tartozott két darab 
@@ -121,7 +124,7 @@ Programkód:
 	a globális referenciákat beleteszi a video közvetítésbe, kimeneti képkockába és a zároló változóba:
 		global vs, outputFrame, lock
 		
-	kiolvassa a következő képkockát, majd újra méretezi, beszürkíti és elhomályosítja a képkockát :
+	kiolvassa a következő képkockát, majd újra méretezi, beszürkíti és elhomályosítja a képkockát:
 		while True:
 			frame = vs.read()
         		frame = imutils.resize(frame, width=400)
@@ -137,10 +140,10 @@ Programkód:
 			with lock:
 				if outputFrame is None:
                 			continue
-				#képkocka kódolása JPEG formátumban
+				# képkocka kódolása JPEG formátumban:
 				(flag, encodedImage) = cv2.imencode(".jpg", outputFrame)
 				
-				#ellenőrzi hogy sikeres volt-e a kódolás
+				# ellenőrzi hogy sikeres volt-e a kódolás:
             			if not flag:
                		 		continue
 	
