@@ -78,17 +78,22 @@ def distance():
     StopTime = time.time()
 
     # save StartTime
+    # kezdési idő elmentése         //new
     while GPIO.input(GPIO_ECHO) == 0:
         StartTime = time.time()
 
     # save time of arrival
+    # érkezési idő elmentése            //new
     while GPIO.input(GPIO_ECHO) == 1:
         StopTime = time.time()
 
     # time difference between start and arrival
+    # időkülönbség indulás és érkezés között            //new
     TimeElapsed = StopTime - StartTime
     # multiply with the sonic speed (34300 cm/s)
+    # szorzás a szonikus sebességgel (34300 cm/s)           //new
     # and divide by 2, because there and back
+    # és osztás kettővel az oda vissza út miatt         //new
     distance = (TimeElapsed * 34300) / 2
 
     dist = int(distance)
