@@ -175,16 +175,19 @@ def read_raw_data(addr):
 def gyro():
     global Ax, Ay, Az, Gx, Gy, Gz
     # Read Accelerometer raw value
+    # A gyorsulásmérő nyers adatainak beolvasása            //new
     acc_x = read_raw_data(ACCEL_XOUT_H)
     acc_y = read_raw_data(ACCEL_YOUT_H)
     acc_z = read_raw_data(ACCEL_ZOUT_H)
 
     # Read Gyroscope raw value
+    # A giroszkóp nyers adatainak beolvasása            //new
     gyro_x = read_raw_data(GYRO_XOUT_H)
     gyro_y = read_raw_data(GYRO_YOUT_H)
     gyro_z = read_raw_data(GYRO_ZOUT_H)
 
     # Full scale range +/- 250 degree/C as per sensitivity scale factor
+    # A teljes mérési tartománya +- 250 °C érzékenységi skála tényezőnként          //new
     Ax = acc_x / 16384.0
     Ay = acc_y / 16384.0
     Az = acc_z / 16384.0
