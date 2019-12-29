@@ -121,6 +121,26 @@ Programkód:
 	megtétele miatt:
     		distance = (TimeElapsed * 34300) / 2
     		dist = int(distance)
+	
+	A gyorsulásmérő és a giroszkóp nyers adatainak beolvasása:
+		def gyro():
+    		global Ax, Ay, Az, Gx, Gy, Gz
+    		acc_x = read_raw_data(ACCEL_XOUT_H)
+    		acc_y = read_raw_data(ACCEL_YOUT_H)
+    		acc_z = read_raw_data(ACCEL_ZOUT_H)
+    		gyro_x = read_raw_data(GYRO_XOUT_H)
+    		gyro_y = read_raw_data(GYRO_YOUT_H)
+    		gyro_z = read_raw_data(GYRO_ZOUT_H)
+		
+	A teljes mérési tartománya +- 250 °C érzékenységi skála tényezőnként:
+    		Ax = acc_x / 16384.0
+    		Ay = acc_y / 16384.0
+   		 Az = acc_z / 16384.0
+    		Gx = gyro_x / 131.0
+    		Gy = gyro_y / 131.0
+    		Gz = gyro_z / 131.0
+    		print("Gx=%.2f" % Gx, u'\u00b0' + "/s", "\tGy=%.2f" % Gy, u'\u00b0' + "/s", "\tGz=%.2f" % Gz, u'\u00b0' + "/s",
+         	"\tAx=%.2f g" % Ax, "\tAy=%.2f g" % Ay, "\tAz=%.2f g" % Az)
 
 	Érzékelő típusának beállítása : DHT11,DHT22 vagy AM2302
 	A szenzorunk a következő GPIO-ra van kötve:
