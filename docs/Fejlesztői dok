@@ -106,6 +106,22 @@ Importált modulok a programkódban:
 
 
 Programkód:
+	A kezdési idő elmentése:
+    		while GPIO.input(GPIO_ECHO) == 0:
+        		StartTime = time.time()
+
+    	Az érkezési idő elmentése:
+    		while GPIO.input(GPIO_ECHO) == 1:
+        		StopTime = time.time()
+
+    	Az időkülönbség kiszámítása indulás és érkezés között:
+    		TimeElapsed = StopTime - StartTime
+
+    	Megszorozzuk a szonikus sebességgel (34300 cm/s), majd ezt osztanunk kell kettővel az oda vissza út 
+	megtétele miatt:
+    		distance = (TimeElapsed * 34300) / 2
+    		dist = int(distance)
+
 	Érzékelő típusának beállítása : DHT11,DHT22 vagy AM2302
 	A szenzorunk a következő GPIO-ra van kötve:
 		global temp, hum
