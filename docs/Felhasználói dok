@@ -1,7 +1,147 @@
-tank
+Projektleírás
+
+A projekt tanulást segítő, jellegéből adódóan.
+A hardverek melyeket használtunk az anyagi kereteink miatt nem a legmegbízhatóbbak,
+viszont a működés elvét képesek bemutatni és igazolni.
+A projektünk több fontos területen is érinti, és bővíti a felhasználó ismereteit.
+
+
+Összekonfigurálás:
+    Szügségünk van a tank főbb alkatrészeinek választására:
+    Vezérlőegység : Raspberry pi (mi 3 b modelt választottunk, de a kód minimális átalakítással működik az új verziókkal is)
+    A Váz, illetve a motrok : A mi projektünkben egy kész vázat választottunk
+                              a banggood.com-oldaláról ez 12V on vesz fel max 3A-t motronként
+                              2 db dc motorral érkezett a ház.
+                              Ennek lényege a tank mozgatása, főbb tulajdonságok amire érdemes figyelni:
+                                                                Méretek - elférnek e a szenzorok
+                                                                Alkatrész minőség - nem mindegy milyen motrokkal érkezik
+
+
+    Tápegység(ek) - a raspberry pi megtáplálásához fontos egy stabil tápegység.
+                    a raspberry 5 volton ~2A áramot vesz fel a gyári tápjával (10W)
+
+                    A vázunk 12v on működik. Ehhez egy külön tápegységet vásároltunk (12v 10000 mA max 6A, integrált töltésvezérlővel)
+                    A tankot ellátjuk még egy további külső akkumulátorral is, mivel túl gyorsan merítették a motrok, illetve a vezérlő eggyütt.
+
+
+    Illesztő(k) - egy H-bridget használunk a motrok vezérlésére.
+                    Ennek lényege a pólusok megcserélése, illetve a pwm jel alapjáni vezérlés biztosítása.
+                    A dc motrok jellegzetessége hogy az irányuk vátoztatható a pólusok megcserélésével.
+
+    Szenzorok - A tank mostmár tudna mozogni van vezérlője, tápja, és egy váza motorral amihez van illesztőnk.
+
+                De szenzorokkal sokkal érdekesebbé tehetjük a működését.
+                Az első prioritás egy webcamera szenzor volt, amire gondoltunk. Míg a raspberry támogatja a kamera szenzorokat a saját portján,
+                az usb-s kamerák olcsobb választásnak tűntek. A szalagkábellel való dolgozás nehézkes, ha nem áll rendelkezésre a megfelelő
+                szerkezeti támasz.
+
+                A tankhoz mindenképp szükségünk volt egy iránytűre és egy gyro szenzorra, ezeket a feladatokat
+                egy MPU9250-as egység látja el (a mi szenzorunk meghibásodott tesztelés közben karácsonykor, és ez azt jelentette, hogy magyarországról kellett beszereznünk).
+                Érdekesség, hogy az MPU9250 al egységeit külön is meg lehet vásárolni míg ezek ára nem oly olcsó, mit a kínai 3 az 1 ben megoldás, még így is olcsóbban jöttünk ki.
+                GY-521 és GY-271 modulokból valósítottuk meg a működést.
+
+                Távolságmérésre a hc-sr04 nevezetű szenzort használjuk, mivel ár-értékben egy kifejezetten jó válaszás.
+
+                Hőmérsékletmérésre a DHT11- elnevezésű szenzort választottuk, ugyanakkor a DHT22 nagyobb precizitással működne.
+
+
+Hardveres rész:
+
+
+Szoftveres rész:
+
+
+Telepítés :
+A raspberry pi-ok álalában kitekben vásárolhatóak, ahol kapunk az ezközhöz egy micro SD kártyát, mejre a Rasbian, vagy a NOOBS operációs rendszer ki van írva.
+A Raspbian nem más, mint egy Raspberry-re fejlesztett operációs rendszer. (A NOOBS egy raspbian rendszer előre telepített programokkal)
+
+Amennyiben nem kaptunk volna előre írt sd kártyát készíthetünk magunk is.
+Kezdjük a letöltéssel https://www.raspberrypi.org/downloads/ oldalon találhatjuk a letölthető fileokat.
+A letöltött fileokat ki kell csomagolnunk, mielött használhatnánk.
+7-Zip (Windows)
+The Unarchiver (Mac)
+Unzip (Linux)
+
+Az így letölttt fileokat ki kell írni egy sd kártyára (Lehetőleg a Class 10 -es vagy jobb besorolású kártyára, legalább 8GB kapacitással).
+
+A kártyát az sdcardformater programmal tudjuk leformázni : (Figyelem elveszik minden adat az SD kártyáról!)
+https://www.sdcard.org/downloads/formatter/
+
+balenaEtcher programmal kiiíjuk a fájlokat a kártyára.
+Miután véztünk a microSD-t behelyezzük a raspberry pi ba.
+
+
+Ezután szügségünk lesz egy monitorra, és egy billenytűzetre hogy beállítsuk a hálózatot a raspberry-n.
+
+miután van hálózatunk le kell töltenünk a git repó tartalmát, ezt legegyszerűbben egy terminálból vitelezhetjük:
+Ctrl + alt + t billenytűkombinációval vagy a terminál ikonra kattintva tetjük meg.
+
+wget https://github.com/N7Remus/ThankProject-micro/archive/master.zip
+vagy a
+git clone https://github.com/N7Remus/ThankProject-micro
+parancsal tehetjük meg.
+
+wget várt eredmény :
+--2020-01-11 18:34:58--  https://github.com/N7Remus/ThankProject-micro/archive/master.zip
+github.com (github.com) feloldása… 140.82.118.4
+Csatlakozás a következőhöz: github.com (github.com)[140.82.118.4]:443… kapcsolódva.
+HTTP kérés elküldve, várakozás válaszra… 302 Found
+Hely: https://codeload.github.com/N7Remus/ThankProject-micro/zip/master [következik]
+--2020-01-11 18:34:58--  https://codeload.github.com/N7Remus/ThankProject-micro/zip/master
+codeload.github.com (codeload.github.com) feloldása… 192.30.253.120
+Csatlakozás a következőhöz: codeload.github.com (codeload.github.com)[192.30.253.120]:443… kapcsolódva.
+HTTP kérés elküldve, várakozás válaszra… 200 OK
+Hossz: nincs megadva [application/zip]
+Mentés ide: „master.zip”
+
+master.zip              [  <=>               ]  51,97K   168KB/s    idő 0,3s
+
+2020-01-11 18:34:59 (168 KB/s) -- „master.zip” mentve [53214]
+
+git parancs eredménye:
+Cloning into 'ThankProject-micro'...
+remote: Enumerating objects: 193, done.
+remote: Counting objects: 100% (193/193), done.
+remote: Compressing objects: 100% (150/150), done.
+remote: Total 193 (delta 98), reused 80 (delta 38), pack-reused 0
+Receiving objects: 100% (193/193), 140.43 KiB | 866.00 KiB/s, done.
+Resolving deltas: 100% (98/98), done.
+
+Az alkalmazás python3- al futtathatjuk, viszont ehhez további modulok szügségesek.
+ezen modulok a python csomagban benne vannak:
+math
+time
+datetime
+os
+threading
+
+Telepítsük a pip3 csomagot, mivel a modulokat ezzel fogjuk telepíteni
+    sudo apt install python3-pip
+flask
+    sudo pip3 install flask
+argparse
+    pip3 install argparse
+imutils
+    pip3 install imgutils
+cv2
+    pip3 install opencv-contrib-python
+
+Adafruit_DHT
+    git clone https://github.com/adafruit/Adafruit_Python_DHT.git
+    cd Adafruit_Python_DHT
+    sudo apt-get install build-essential python-dev
+    sudo python3 setup.py install
+
+# https://www.pyimagesearch.com/2019/09/16/install-opencv-4-on-raspberry-pi-4-and-raspbian-buster/
+# remekül le van írva a telepítés menete
+
+Használat :
+    A letöltött fileok között a fő mappában van a fix verzió tank.py néven.
+    sudo python3 tank.py --ip 0.0.0.0 --port 8000
+
+Bekapcsolás :
 
 1 be kell kapcsolni a tápokat, a 12 voltos-on van gomb, a másik az meg usb csatlakozású.
-# belinkelt rasberry telepítés
 
 
 A rasberry-t elérjük ssh-n:
