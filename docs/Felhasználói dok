@@ -21,6 +21,7 @@ A projektünk több fontos területen is érinti, és bővíti a felhasználó i
                     a raspberry 5 volton ~2A áramot vesz fel a gyári tápjával (10W)
 
                     A vázunk 12v on működik. Ehhez egy külön tápegységet vásároltunk (12v 10000 mA max 6A, integrált töltésvezérlővel)
+                    LM2596 DC-DC step down modullal képesek vagyunk ellátni a raspberry-t.
                     A tankot ellátjuk még egy további külső akkumulátorral is, mivel túl gyorsan merítették a motrok, illetve a vezérlő eggyütt.
 
 
@@ -75,6 +76,12 @@ Ezután szügségünk lesz egy monitorra, és egy billenytűzetre hogy beállít
 
 miután van hálózatunk le kell töltenünk a git repó tartalmát, ezt legegyszerűbben egy terminálból vitelezhetjük:
 Ctrl + alt + t billenytűkombinációval vagy a terminál ikonra kattintva tetjük meg.
+
+sudo raspi-config   segítségével beállíthatjuk a rendszerbeállításokat.
+
+be tudjuk állítani a hálózatot.
+bővítsük ki a filerendszer méretét.
+az interface beállításokba kapcsoljuk be az i2c kommunikációt.
 
 wget https://github.com/N7Remus/ThankProject-micro/archive/master.zip
 vagy a

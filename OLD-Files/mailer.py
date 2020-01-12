@@ -1,9 +1,13 @@
 import smtplib, ssl
+import configparser
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 smtp_server = "smtp.gmail.com"
 port = 587  # For starttls
-sender_email = "tankdatatest@gmail.com"
-password = ""
+
+sender_email = config['EMAIL']['Email_user']
+password = config['EMAIL']['Email_password']
 #https://realpython.com/python-send-email/
 
 # Create a secure SSL context
