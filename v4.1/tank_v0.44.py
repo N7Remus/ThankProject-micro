@@ -105,7 +105,7 @@ def DHT11_read():
     global temp, hum
     gpio = 17
 
-    # A read_retry eljárást használjuk. Ez akár 15x is megpróbálja kiolvasni az érzékelőből az adatot (és minden olvasás előtt 2 másodpercet vár).
+    # Ha a read_retry eljárást használjuk. Akkor akár 15x is megpróbálja kiolvasni az érzékelőből az adatot (és minden olvasás előtt 2 másodpercet vár).
     # humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, gpio)
     humidity, temperature = Adafruit_DHT.read(Adafruit_DHT.DHT11, gpio)
     # A DHT11 kiolvasása nagyon érzékeny az időzítésre és a Pi alkalmanként
