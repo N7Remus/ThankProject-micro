@@ -77,25 +77,26 @@
 				if (w != joystick.deltaX() || h != joystick.deltaY()){
 					w = -joystick.deltaX();
 					h = -joystick.deltaY();
+
+					data = httpGet("ajax/?w="+w+"&h="+h)
+					/*if (data<30){
+						data = '<p style="color:red">'+data+'cm</p>'
+					}else if (data<130){
+						data = '<p style="color:blue">'+data+'cm</p>'
+					}else if (data<400){
+						data = '<p style="color:green">'+data+'cm</p>'
+					}else {
+						data = '<p style="color:white">pontatlan mérés - '+data+'cm</p>'
+					}*/
+					outputEl.innerHTML	= '<b>Result:</b> '
+						+ ' dx:'+joystick.deltaX()
+						+ ' dy:'+joystick.deltaY()
+						+ ' data:'+data
+						+ (joystick.right()	? ' right'	: '')
+						+ (joystick.up()	? ' up'		: '')
+						+ (joystick.left()	? ' left'	: '')
+						+ (joystick.down()	? ' down' 	: '')
 				}
-				data = httpGet("ajax/?w="+w+"&h="+h)
-				/*if (data<30){
-					data = '<p style="color:red">'+data+'cm</p>'
-				}else if (data<130){
-					data = '<p style="color:blue">'+data+'cm</p>'
-				}else if (data<400){
-					data = '<p style="color:green">'+data+'cm</p>'
-				}else {
-					data = '<p style="color:white">pontatlan mérés - '+data+'cm</p>'
-				}*/
-				outputEl.innerHTML	= '<b>Result:</b> '
-					+ ' dx:'+joystick.deltaX()
-					+ ' dy:'+joystick.deltaY()
-					+ ' data:'+data
-					+ (joystick.right()	? ' right'	: '')
-					+ (joystick.up()	? ' up'		: '')
-					+ (joystick.left()	? ' left'	: '')
-					+ (joystick.down()	? ' down' 	: '')	
 			}, 1/3 * 1000);
 		</script>
 	</body>
