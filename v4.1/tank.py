@@ -244,10 +244,10 @@ class mySensors(threading.Thread):
 
     def run(self):
         while True:
-            distance()
-            gyro()
+            #distance()
+            #gyro()
             time.sleep(1)
-            DHT11_read()
+            #DHT11_read()
             time.sleep(1)
         pass
 
@@ -419,7 +419,7 @@ def ajax():
     content = "<h2>Inputok(x/y) : " + str(x) + " : " + str(y) + "</h2>"
     # DHT11 (Hőfok és páratartalom szenzor) adatai
     content += "<h2>Páratartalom / Hőmérséklet : " + str(hum) + " ; " + str(temp) + "</h2>"
-    # SR04 (Ultrahangos távolságszenzor) adatai
+    # SR04 (Ultrahangos távolságszenzor) adatai itt van egy javítás, mivel a szenzor 4-9 cm-t csal
     content += "<h2>Távolság : " + str(dist) + " Valós: " + str(dist - 9) + "</h2>"
     # MPU 6050
     content += "<h2>Gyorsulás : " + str(Ax) + " " + str(Ay) + " " + str(Az) + "</h2>"
