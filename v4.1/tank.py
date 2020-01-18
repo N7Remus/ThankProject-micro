@@ -380,42 +380,41 @@ def ajax():
 
     left = 0
     right = 0
-    if False:
-        #balra vagy jobra megyek?
-        if x < -20:
-            left = abs(x)
-            right = 100 - abs(x)
-        elif x > 20:
-            right = abs(x)
-            left = 100 - abs(x)
-        else:
-            right = abs(y)
-            left = abs(y)
-        if y == 0:
-            changePWM(0, 0)
-            changePWM(1, 0)
-            changePWM(2, 0)
-            changePWM(3, 0)
-        elif y < -10:
-            p1 = 0
-            p2 = 2
-            # OFF
-            p3 = 1
-            p4 = 3
-            changePWM(p3, 0)
-            changePWM(p4, 0)
-            changePWM(p1, left)
-            changePWM(p2, right)
-        elif y > 10:
-            p1 = 1
-            p2 = 3
-            # OFF
-            p3 = 0
-            p4 = 2
-            changePWM(p3, 0)
-            changePWM(p4, 0)
-            changePWM(p1, left)
-            changePWM(p2, right)
+    #balra vagy jobra megyek?
+    if x < -20:
+        left = abs(x)
+        right = 100 - abs(x)
+    elif x > 20:
+        right = abs(x)
+        left = 100 - abs(x)
+    else:
+        right = abs(y)
+        left = abs(y)
+    if y == 0:
+        changePWM(0, 0)
+        changePWM(1, 0)
+        changePWM(2, 0)
+        changePWM(3, 0)
+    elif y < -10:
+        p1 = 0
+        p2 = 2
+        # OFF
+        p3 = 1
+        p4 = 3
+        changePWM(p3, 0)
+        changePWM(p4, 0)
+        changePWM(p1, left)
+        changePWM(p2, right)
+    elif y > 10:
+        p1 = 1
+        p2 = 3
+        # OFF
+        p3 = 0
+        p4 = 2
+        changePWM(p3, 0)
+        changePWM(p4, 0)
+        changePWM(p1, left)
+        changePWM(p2, right)
 
     # Inputok kijelzése
     content = "<h2>Inputok(x/y) : " + str(x) + " : " + str(y) + "</h2>"

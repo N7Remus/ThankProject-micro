@@ -1,0 +1,103 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		
+		<style>
+		body {
+			overflow	: hidden;
+			padding		: 0;
+			margin		: 0;
+			background : black url("{{ url_for('video_feed') }}")  no-repeat fixed center;
+		    height: 100%;
+		      background-size: cover;
+
+
+		}
+		#info {
+			background-color:rgba(255, 255, 255, 0.5);
+			position	: absolute;
+			top		: 0px;
+			width		: 100%;
+			padding		: 5px;
+			text-align	: center;
+		}
+		#info a {
+			color		: #66F;
+			text-decoration	: none;
+		}
+		#info a:hover {
+			text-decoration	: underline;
+		}
+		#container {
+			width		: 100%;
+			height		: 100%;
+			overflow	: hidden;
+			padding		: 0;
+			margin		: 0;
+			-webkit-user-select	: none;
+			-moz-user-select	: none;
+		}
+		</style>
+	</head>
+	<body>
+		<div id="container"></div>
+		<div id="info">
+			<span id="result"></span>
+		</div>
+		<script src="../virtualjoystick.js"></script>
+		<script>
+			console.log("touchscreen is", VirtualJoystick.touchScreenAvailable() ? "available" : "not available");
+			function httpGet(theUrl)
+			{
+				var xmlHttp = new XMLHttpRequest();
+				xmlHttp.open( "GET", theUrl, false ); // false for synchronous request
+				xmlHttp.send( null );
+				return xmlHttp.responseText;
+			}
+
+			var w = 0;
+			var h = 0;
+			var data = "";
+			var joystick	= new VirtualJoystick({
+				container	: document.getElementById('container'),
+				mouseSupport	: true,
+				limitStickTravel : true,
+
+			});
+			joystick.addEventListener('touchStart', function(){
+				console.log('down')
+			})
+			joystick.addEventListener('touchEnd', function(){
+				console.log('up')
+			})
+
+			setInterval(function(){
+				var outputEl	= document.getElementById('result');
+				if (w != joystick.deltaX() || h != joystick.deltaY()){
+					w = -joystick.deltaX();
+					h = -joystick.deltaY();
+
+					data = httpGet("ajax/?w="+w+"&h="+h)
+					/*if (data<30){
+						data = '<p style="color:red">'+data+'cm</p>'
+					}else if (data<130){
+						data = '<p style="color:blue">'+data+'cm</p>'
+					}else if (data<400){
+						data = '<p style="color:green">'+data+'cm</p>'
+					}else {
+						data = '<p style="color:white">pontatlan mérés - '+data+'cm</p>'
+					}*/
+					outputEl.innerHTML	= '<b>Result:</b> '
+						+ ' dx:'+joystick.deltaX()
+						+ ' dy:'+joystick.deltaY()
+						+ ' data:'+data
+						+ (joystick.right()	? ' right'	: '')
+						+ (joystick.up()	? ' up'		: '')
+						+ (joystick.left()	? ' left'	: '')
+						+ (joystick.down()	? ' down' 	: '')
+				}
+			}, 1/30 * 1000);
+		</script>
+	</body>
+</html>
