@@ -425,7 +425,7 @@ def ajax():
     content += "<h2>Gyorsulás : " + str(Ax) + " " + str(Ay) + " " + str(Az) + "</h2>"
     content += "<h2>Helyzet : " + str(Gx) + " " + str(Gy) + " " + str(Gz) + "</h2>"
     # HMC5883L
-    #content += "<h2>Angle : " + str(angle()) + "</h2>"
+    content += "<h2>Angle : " + str(angle()) + "</h2>"
 
     mimetype = "text/html"
 
