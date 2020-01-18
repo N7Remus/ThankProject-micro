@@ -312,7 +312,7 @@ def index():
     return render_template("basic2.html")
 
 
-def detect_motion(frameCount):
+def detect_motion():
     # grab global references to the video stream, output frame, and
     # lock variables
     # a globális referenciákat beleteszi a video közvetítésbe, kimeneti képkockába és a zároló változóba            //new
@@ -454,20 +454,20 @@ if __name__ == '__main__':
                     help="ip address of the device")
     ap.add_argument("-o", "--port", type=int, required=True,
                     help="ephemeral port number of the server (1024 to 65535)")
-    ap.add_argument("-f", "--frame-count", type=int, default=32,
-                    help="# of frames used to construct the background model")
     args = vars(ap.parse_args())
 
     # start a thread that will perform motion detection
     # mozgásérzékelés indítása          //new
-    t = threading.Thread(target=detect_motion, args=(
-        args["frame_count"],))
+
+    t = threading.Thread(target=detect_motion, args=())
     t.daemon = True
     t.start()
 
+    # sensors.start()
+
     # start the flask app
     # flask alkalmazás indítása         //new
-    sensors.start()
+
     app.run(host=args["ip"], port=args["port"], debug=True,
             threaded=True, use_reloader=False)
 
