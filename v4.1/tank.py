@@ -1,20 +1,18 @@
-# coding=utf-8
-# USAGE
-# python webstreaming.py --ip 0.0.0.0 --port 8000
-
-# import the necessary packages
+# képmanipuláló modulok
 from imutils.video import VideoStream
+import imutils
+import cv2
+# webszerver
 from flask import Response
 from flask import Flask
 from flask import render_template
 from flask import request
+# paraméterek, illesztőkhöz való modulok
 import threading
 import argparse
 import datetime
-import imutils
 import math
 import time
-import cv2
 import os.path
 import Adafruit_DHT
 
@@ -23,10 +21,10 @@ try:
     import RPi.GPIO as GPIO
 except RuntimeError:
     print(
-        "Error importing RPi.GPIO!  This is probably because you need superuser privileges.  You can achieve this by using 'sudo' to run your script")
-import smbus  # import SMBus module of I2C
+        "Error importing RPi.GPIO!  Hiba az importálás közben, probáld 'sudo'-val")
+import smbus  # I2C kommunkáció
 
-# https://sourceforge.net/p/raspberry-gpio-python/wiki/PWM/ example alajpján
+# pinbeállítás
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
@@ -47,54 +45,44 @@ GPIO_TRIGGER = 23
 GPIO_ECHO = 24
 GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
 GPIO.setup(GPIO_ECHO, GPIO.IN)
+# publikus változó a távolság meghatározásához
 dist = 0
-
 # hőmérséklet
 temp = 0
 # páratartalom
 hum = 0
 
-pwm = []
-
-pwm.append(GPIO.PWM(LF_PIN, 50))
-pwm.append(GPIO.PWM(LB_PIN, 50))
-pwm.append(GPIO.PWM(RF_PIN, 50))
-pwm.append(GPIO.PWM(RB_PIN, 50))
+# a pwm pinek, melyekkel a motrok vezérelve lesznek az alábbi tömbben lesznek letárolva
+pwm = [GPIO.PWM(LF_PIN, 50), GPIO.PWM(LB_PIN, 50), GPIO.PWM(RF_PIN, 50), GPIO.PWM(RB_PIN, 50)]
 
 
-# wait_for_ajax = 100 # x ajax kérés után kárjök le a dht szenzort, mivel egyébként lassítja
 def distance():
+    # hc-sr04
+    # ez a függvény végzi az ultrahangos szenzor működtetését.
     global dist
-    # set Trigger to HIGH
+    # kiadjuk az impulzust
     GPIO.output(GPIO_TRIGGER, True)
 
-    # set Trigger after 0.01ms to LOW
+    # a jeladás után pihentetjük, majd  0.01ms után lekapcsoljuk
     time.sleep(0.00001)
     GPIO.output(GPIO_TRIGGER, False)
-
+    # kiszámoljuk az időt ami alatt a jel visszaérkezik
     StartTime = time.time()
     StopTime = time.time()
-
-    # save StartTime
     # kezdési idő elmentése         //new
     while GPIO.input(GPIO_ECHO) == 0:
         StartTime = time.time()
-
-    # save time of arrival
     # érkezési idő elmentése            //new
     while GPIO.input(GPIO_ECHO) == 1:
         StopTime = time.time()
 
-    # time difference between start and arrival
     # időkülönbség indulás és érkezés között            //new
     TimeElapsed = StopTime - StartTime
-    # multiply with the sonic speed (34300 cm/s)
     # szorzás a szonikus sebességgel (34300 cm/s)           //new
-    # and divide by 2, because there and back
     # és osztás kettővel az oda vissza út miatt         //new
-    distance = (TimeElapsed * 34300) / 2
+    d = (TimeElapsed * 34300) / 2
 
-    dist = int(distance)
+    dist = int(d)
 
 
 def DHT11_read():
@@ -115,7 +103,6 @@ def DHT11_read():
         return "", ""
 
 
-# some MPU6050 Registers and their Address
 Device_Address_MPU = 0x1e  # HMC5883L magnetometer device address
 
 PWR_MGMT_1 = 0x6B
@@ -138,6 +125,17 @@ Gx = 0
 Gy = 0
 Gz = 0
 
+# some MPU6050 Registers and their Address
+Register_A = 0  # Address of Configuration register A
+Register_B = 0x01  # Address of configuration register B
+Register_mode = 0x02  # Address of mode register
+
+X_axis_H = 0x03  # Address of X-axis MSB data register
+Z_axis_H = 0x05  # Address of Z-axis MSB data register
+Y_axis_H = 0x07  # Address of Y-axis MSB data register
+declination = -0.00669  # define declination angle of location where measurement going to be done
+pi = 3.14159265359  # define pi value
+
 
 def MPU_Init():
     # write to sample rate register
@@ -156,6 +154,21 @@ def MPU_Init():
     bus.write_byte_data(Device_Address, INT_ENABLE, 1)
 
 
+def Magnetometer_Init():
+    bus.write_byte_data(Device_Address_MPU, 0x37, 0x02)
+    bus.write_byte_data(Device_Address_MPU, 0x6A, 0x00)
+    bus.write_byte_data(Device_Address_MPU, 0x6B, 0x00)
+
+    # write to Configuration Register A
+    bus.write_byte_data(Device_Address, Register_A, 0x70)
+
+    # Write to Configuration Register B for gain
+    bus.write_byte_data(Device_Address, Register_B, 0xa0)
+
+    # Write to mode Register for selecting mode
+    bus.write_byte_data(Device_Address, Register_mode, 0)
+
+
 def read_raw_data(addr):
     # Accelero and Gyro value are 16-bit
     high = bus.read_byte_data(Device_Address, addr)
@@ -172,13 +185,11 @@ def read_raw_data(addr):
 
 def gyro():
     global Ax, Ay, Az, Gx, Gy, Gz
-    # Read Accelerometer raw value
     # A gyorsulásmérő nyers adatainak beolvasása            //new
     acc_x = read_raw_data(ACCEL_XOUT_H)
     acc_y = read_raw_data(ACCEL_YOUT_H)
     acc_z = read_raw_data(ACCEL_ZOUT_H)
 
-    # Read Gyroscope raw value
     # A giroszkóp nyers adatainak beolvasása            //new
     gyro_x = read_raw_data(GYRO_XOUT_H)
     gyro_y = read_raw_data(GYRO_YOUT_H)
@@ -195,6 +206,30 @@ def gyro():
     Gz = gyro_z / 131.0
     print("Gx=%.2f" % Gx, u'\u00b0' + "/s", "\tGy=%.2f" % Gy, u'\u00b0' + "/s", "\tGz=%.2f" % Gz, u'\u00b0' + "/s",
           "\tAx=%.2f g" % Ax, "\tAy=%.2f g" % Ay, "\tAz=%.2f g" % Az)
+
+
+def angle():
+    # magnetométer infója
+    # Read Accelerometer raw value
+    x = read_raw_data(X_axis_H)
+    z = read_raw_data(Z_axis_H)
+    y = read_raw_data(Y_axis_H)
+
+    print(x, y, z)
+
+    heading = math.atan2(y, x) + declination
+
+    # Due to declination check for >360 degree
+    if heading > 2 * pi:
+        heading = heading - 2 * pi
+
+    # check for sign
+    if heading < 0:
+        heading = heading + 2 * pi
+
+    # convert into angle
+    heading_angle = int(heading * 180 / pi)
+    return heading_angle
 
 
 bus = smbus.SMBus(1)  # or bus = smbus.SMBus(0) for older version boards
@@ -390,7 +425,7 @@ def ajax():
     content += "<h2>Gyorsulás : " + str(Ax) + " " + str(Ay) + " " + str(Az) + "</h2>"
     content += "<h2>Helyzet : " + str(Gx) + " " + str(Gy) + " " + str(Gz) + "</h2>"
     # HMC5883L
-    # content += "<h2>Angle : " + str(angle()) + "</h2>"
+    content += "<h2>Angle : " + str(angle()) + "</h2>"
 
     mimetype = "text/html"
 
