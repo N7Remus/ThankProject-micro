@@ -309,8 +309,8 @@ def index():
     # return render_template("index.html")
     # return render_template("joystick.html")
     # visszaadja a render sablont           //new
-    return render_template("basic2.html")
-
+    return render_template("basic.html")
+    #basic2 -kamerateszt
 
 def detect_motion():
     # grab global references to the video stream, output frame, and
