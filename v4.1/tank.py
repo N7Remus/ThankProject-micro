@@ -345,7 +345,7 @@ def index():
     # return render_template("index.html")
     # return render_template("joystick.html")
     # visszaadja a render sablont           //new
-    return render_template("basic3.html")
+    return render_template("index.html")
     # basic2 -kamerateszt
 
 
