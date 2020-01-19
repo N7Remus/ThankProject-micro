@@ -595,17 +595,17 @@ def stat():
     # type (mime type)
     content = ""
 
-    content += "<h2>Átlagos Távolság : " + str(avg_dist) + "</h2>"
-    content += "<h2>Jelenlegi Távolság : " + str(dist) + "</h2>"
+    content += "<h4>Átlagos Távolság : " + str(avg_dist) + "</h4>"
+    content += "<h4>Jelenlegi Távolság : " + str(dist) + "</h4>"
 
-    content += "<h2>Átlagos Hőmérséklet : " + str(avg_temp) + "</h2>"
-    content += "<h2>Jelenlegi Hőmérséklet : " + str(temp) + "</h2>"
+    content += "<h4>Átlagos Hőmérséklet : " + str(avg_temp) + "</h4>"
+    content += "<h4>Jelenlegi Hőmérséklet : " + str(temp) + "</h4>"
 
-    content += "<h2>Átlagos Páratartalom : " + str(avg_hum) + "</h2>"
-    content += "<h2>Jelenlegi Páratartalom : " + str(hum) + "</h2>"
+    content += "<h4>Átlagos Páratartalom : " + str(avg_hum) + "</h4>"
+    content += "<h4>Jelenlegi Páratartalom : " + str(hum) + "</h4>"
 
-    content += "<h2>Átlagos Szög : " + str(avg_heading_angle) + "</h2>"
-    content += "<h2>Jelenlegi Szög : " + str(heading_angle) + "</h2>"
+    content += "<h4>Átlagos Szög : " + str(avg_heading_angle) + "</h4>"
+    content += "<h4>Jelenlegi Szög : " + str(heading_angle) + "</h4>"
 
     mimetype = "text/html"
 
@@ -615,14 +615,14 @@ def stat():
 @app.route("/take_pic")
 def take_pic():
     generate_mail()
-    content = "<h2> Elküldve </h2>"
+    content = "<h4> Elküldve </h4>"
     mimetype = "text/html"
     return Response(content, mimetype=mimetype)
 
 @app.route("/take_pic_with_stat")
 def take_pic_with_stat():
     generate_mail(True)
-    content = "<h2> Elküldve -statisztizkával </h2>"
+    content = "<h4> Elküldve -statisztizkával </h4>"
     mimetype = "text/html"
     return Response(content, mimetype=mimetype)
 
@@ -675,16 +675,16 @@ def ajax():
         changePWM(p2, right)
 
     # Inputok kijelzése
-    content = "<h2>Inputok(x/y) : " + str(x) + " : " + str(y) + "</h2>"
+    content = "<h4>Inputok(x/y) : " + str(x) + " : " + str(y) + "</h4>"
     # DHT11 (Hőfok és páratartalom szenzor) adatai
-    content += "<h2>Páratartalom / Hőmérséklet : " + str(hum) + " ; " + str(temp) + "</h2>"
+    content += "<h4>Páratartalom / Hőmérséklet : " + str(hum) + " ; " + str(temp) + "</h4>"
     # SR04 (Ultrahangos távolságszenzor) adatai itt van egy javítás, mivel a szenzor 4-9 cm-t csal
-    content += "<h2>Távolság : " + str(dist) + " Valós: " + str(dist - 9) + "</h2>"
+    content += "<h4>Távolság : " + str(dist) + " Valós: " + str(dist - 9) + "</h4>"
     # MPU 6050
-    content += "<h2>Gyorsulás : " + str(Ax) + " " + str(Ay) + " " + str(Az) + "</h2>"
-    content += "<h2>Helyzet : " + str(Gx) + " " + str(Gy) + " " + str(Gz) + "</h2>"
+    content += "<h4>Gyorsulás : " + str(Ax) + " " + str(Ay) + " " + str(Az) + "</h4>"
+    content += "<h4>Helyzet : " + str(Gx) + " " + str(Gy) + " " + str(Gz) + "</h4>"
     # HMC5883L
-    content += "<h2>Angle : " + str(heading_angle) + "</h2>"
+    content += "<h4>Angle : " + str(heading_angle) + "</h4>"
 
     mimetype = "text/html"
 
