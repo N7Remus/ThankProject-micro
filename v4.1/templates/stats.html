@@ -16,7 +16,7 @@ function get_fb(){
     }).complete(function(){
         setTimeout(function(){get_fb();}, 10000);
     }).responseText;
-
+    console.log(feedback);
     $('div.feedback-box').html(feedback);
 }
 </script>
