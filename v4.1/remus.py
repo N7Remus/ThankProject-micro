@@ -37,6 +37,139 @@ Y_axis_H = 0x07  # Address of Y-axis MSB data register
 declination = -0.00669  # define declination angle of location where measurement going to be done
 pi = 3.14159265359  # define pi value
 
+class DHT_class:
+
+    # https://github.com/adafruit/Adafruit_Python_DHT alapján
+    def __init__(self, pin=17):
+        self.pin = pin
+        self.temp = 0
+        self.hum = 0
+
+    def printPin(self):
+        print("A DHT modul a " + str(self.pin) + " pinen kommunikál")
+
+    def update(self):
+        # Érzékelő típusának beállítása : DHT11,DHT22 vagy AM2302
+        # A szenzorunk a következő GPIO-ra van kötve: self.pin, ezt inicializálásko elkérem
+        # Ha a read_retry eljárást használjuk. Akkor akár 15x is megpróbálja kiolvasni az érzékelőből az adatot (és minden olvasás előtt 2 másodpercet vár).
+        # humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, gpio)
+        humidity, temperature = Adafruit_DHT.read(Adafruit_DHT.DHT11, self.pin)
+        # A DHT11 kiolvasása nagyon érzékeny az időzítésre és a Pi alkalmanként
+        # nem tud helyes értéket kiolvasni. Ezért megnézzük, hogy helyesek-e a kiolvasott értékek.
+        if humidity is not None and temperature is not None:
+            self.temp = temperature
+            self.hum = humidity
+
+    def htmlFormat(self):
+        content = "Hőmérséklet : " + str(self.temp) + " Páratartalom" + str(self.hum)
+        return content
+
+
+class L298N_class:
+
+    def __init__(self, holdback=0.5,  LF_PIN=13, LB_PIN=19, RF_PIN=18, RB_PIN=12):
+        GPIO.setup(LF_PIN, GPIO.OUT)  # jobbra kanyarodáshoz
+        GPIO.setup(LB_PIN, GPIO.OUT)
+        GPIO.setup(RF_PIN, GPIO.OUT)
+        GPIO.setup(RB_PIN, GPIO.OUT)
+        self.holdback = holdback
+        self.pwm = [GPIO.PWM(LF_PIN, 50), GPIO.PWM(LB_PIN, 50), GPIO.PWM(RF_PIN, 50), GPIO.PWM(RB_PIN, 50)]
+        '''
+        for p in self.pwm:
+            p.start(0)
+        '''
+
+    def changePWM(self,pin, goal):
+        self.pwm[pin].ChangeDutyCycle(int(goal * self.holdback))
+
+    def update(self, x=0, y=0):
+        x = int(float(x))
+        y = int(float(y))
+
+        left = 0
+        right = 0
+        # balra vagy jobra megyek?
+        if x < -20:
+            left = abs(x)
+            right = 100 - abs(x)
+        elif x > 20:
+            right = abs(x)
+            left = 100 - abs(x)
+        else:
+            right = abs(y)
+            left = abs(y)
+        if y == 0:
+            self.changePWM(0, 0)
+            self.changePWM(1, 0)
+            self.changePWM(2, 0)
+            self.changePWM(3, 0)
+        elif y < -10:
+            p1 = 0
+            p2 = 2
+            # OFF
+            p3 = 1
+            p4 = 3
+            self.changePWM(p3, 0)
+            self.changePWM(p4, 0)
+            self.changePWM(p1, left)
+            self.changePWM(p2, right)
+        elif y > 10:
+            p1 = 1
+            p2 = 3
+            # OFF
+            p3 = 0
+            p4 = 2
+            self.changePWM(p3, 0)
+            self.changePWM(p4, 0)
+            self.changePWM(p1, left)
+            self.changePWM(p2, right)
+
+
+
+class HCSR_class:
+
+    # https://tutorials-raspberrypi.com/raspberry-pi-ultrasonic-sensor-hc-sr04/ alapján
+    def __init__(self, trigger=23, echo=24):
+        self.trigger = trigger
+        self.echo = echo
+        self.distance = 0
+        GPIO.setup(trigger, GPIO.OUT)
+        GPIO.setup(trigger, GPIO.OUT)
+
+    def printPin(self):
+        print("A modul trigger: " + str(self.trigger) + " pinen kommunikál")
+        print("A modul echo: " + str(self.echo) + " pinen kommunikál")
+
+    def update(self):
+        # hc-sr04
+        # ez a függvény végzi az ultrahangos szenzor működtetését.
+        # kiadjuk az impulzust
+        GPIO.output(self.trigger, True)
+        # a jeladás után pihentetjük, majd  0.01ms után lekapcsoljuk
+        time.sleep(0.00001)
+        GPIO.output(self.trigger, False)
+        # kiszámoljuk az időt ami alatt a jel visszaérkezik
+        StartTime = time.time()
+        StopTime = time.time()
+        # kezdési idő elmentése         //new
+        while GPIO.input(self.echo) == 0:
+            StartTime = time.time()
+        # érkezési idő elmentése            //new
+        while GPIO.input(self.echo) == 1:
+            StopTime = time.time()
+
+        # időkülönbség indulás és érkezés között            //new
+        TimeElapsed = StopTime - StartTime
+        # szorzás a szonikus sebességgel (34300 cm/s)           //new
+        # és osztás kettővel az oda vissza út miatt         //new
+        d = (TimeElapsed * 34300) / 2
+
+        self.distance = int(d)
+
+    def htmlFormat(self):
+        content = "Távolság : " + str(self.distance)
+        return content
+
 
 class MPU_class:
 
@@ -106,4 +239,18 @@ class MPU_class:
 
 m = MPU_class(bus)
 m.update()
+d = DHT_class()
+d.update()
+h = HCSR_class()
+h.update()
+# motorvezérlő
+l = L298N_class()
+l.update()
+
+
 print(m.htmlFormat())
+print(d.htmlFormat())
+print(h.htmlFormat())
+
+
+
