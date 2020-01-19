@@ -14,6 +14,7 @@ class MPU_class:
         self.Device_Address = Device_Address_MPU
         self.angle = 0
     def Magnetometer_Init(self):
+        global bus
         bus.write_byte_data(self.Device_Address, 0x37, 0x02)
         bus.write_byte_data(self.Device_Address, 0x6A, 0x00)
         bus.write_byte_data(self.Device_Address, 0x6B, 0x00)
@@ -28,6 +29,7 @@ class MPU_class:
         bus.write_byte_data(self.Device_Address, Register_mode, 0)
         '''
     def read_raw_data(self,addr):
+        global bus
         # Accelero and Gyro value are 16-bit
         high = bus.read_byte_data(self.Device_Address, addr)
         low = bus.read_byte_data(self.Device_Address, addr + 1)
