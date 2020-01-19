@@ -58,6 +58,7 @@ class MPU_class:
         print("Az iránytű modul modul: " + str(self.Device_Address) + " címen kommunikál")
 
     def update(self):
+        print("update")
 
     def htmlFormat(self):
         content = "Távolság : " + str(self.angle)
