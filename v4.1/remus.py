@@ -239,11 +239,13 @@ class MPU_class:
 
 m = MPU_class(bus)
 m.update()
-d = DHT_class()
-d.update()
 h = HCSR_class()
 h.update()
 # motorvezérlő
+d = DHT_class()
+d.update()
+
+
 l = L298N_class()
 l.update()
 

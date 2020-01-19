@@ -104,7 +104,7 @@ def DHT11_read():
 
 
 Device_Address_MPU = 0x1e  # HMC5883L magnetometer device address
-
+heading_angle = 0
 PWR_MGMT_1 = 0x6B
 SMPLRT_DIV = 0x19
 CONFIG = 0x1A
@@ -158,7 +158,7 @@ def Magnetometer_Init():
     bus.write_byte_data(Device_Address_MPU, 0x37, 0x02)
     bus.write_byte_data(Device_Address_MPU, 0x6A, 0x00)
     bus.write_byte_data(Device_Address_MPU, 0x6B, 0x00)
-
+    '''
     # write to Configuration Register A
     bus.write_byte_data(Device_Address, Register_A, 0x70)
 
@@ -167,6 +167,7 @@ def Magnetometer_Init():
 
     # Write to mode Register for selecting mode
     bus.write_byte_data(Device_Address, Register_mode, 0)
+    '''
 
 
 def read_raw_data(addr):
@@ -209,6 +210,7 @@ def gyro():
 
 
 def angle():
+    global heading_angle
     # magnetométer infója
     # Read Accelerometer raw value
     x = read_raw_data(X_axis_H)
@@ -229,7 +231,6 @@ def angle():
 
     # convert into angle
     heading_angle = int(heading * 180 / pi)
-    return heading_angle
 
 
 bus = smbus.SMBus(1)  # or bus = smbus.SMBus(0) for older version boards
@@ -244,16 +245,51 @@ class mySensors(threading.Thread):
 
     def run(self):
         while True:
-            #distance()
-            #gyro()
+            distance()
             time.sleep(1)
-            #DHT11_read()
+        pass
+
+
+class myGyroSensor(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.board = 1
+
+    def run(self):
+        while True:
+            gyro()
+            time.sleep(1)
+        pass
+
+
+class myDHTSensor(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.board = 1
+
+    def run(self):
+        while True:
+            DHT11_read()
+            time.sleep(1)
+        pass
+
+
+class myAngleSensor(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.board = 1
+
+    def run(self):
+        while True:
+            angle()
             time.sleep(1)
         pass
 
 
 sensors = mySensors()
-
+sensors_2 = myAngleSensor()
+sensors_3 = myDHTSensor()
+sensors_4 = myGyroSensor()
 
 def changePWM(pin, goal):
     global pwm
@@ -310,7 +346,8 @@ def index():
     # return render_template("joystick.html")
     # visszaadja a render sablont           //new
     return render_template("basic3.html")
-    #basic2 -kamerateszt
+    # basic2 -kamerateszt
+
 
 def detect_motion():
     # grab global references to the video stream, output frame, and
@@ -324,7 +361,7 @@ def detect_motion():
         # read the next frame from the video stream, resize it,
         # convert the frame to grayscale, and blur it
         frame = vs.read()
-        #frame = imutils.resize(frame, width=400)
+        # frame = imutils.resize(frame, width=400)
 
         with lock:
             outputFrame = frame.copy()
@@ -377,10 +414,9 @@ def ajax():
     x = int(float(x))
     y = int(float(y))
 
-
     left = 0
     right = 0
-    #balra vagy jobra megyek?
+    # balra vagy jobra megyek?
     if x < -20:
         left = abs(x)
         right = 100 - abs(x)
@@ -426,7 +462,7 @@ def ajax():
     content += "<h2>Gyorsulás : " + str(Ax) + " " + str(Ay) + " " + str(Az) + "</h2>"
     content += "<h2>Helyzet : " + str(Gx) + " " + str(Gy) + " " + str(Gz) + "</h2>"
     # HMC5883L
-    #content += "<h2>Angle : " + str(angle()) + "</h2>"
+    content += "<h2>Angle : " + str(heading_angle) + "</h2>"
 
     mimetype = "text/html"
 
@@ -464,8 +500,11 @@ if __name__ == '__main__':
     t.daemon = True
     t.start()
 
-    # sensors.start()
+    sensors.start()
 
+    sensors_2.start()
+    sensors_3.start()
+    sensors_4.start()
     # start the flask app
     # flask alkalmazás indítása         //new
 
