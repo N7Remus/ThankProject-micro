@@ -1,24 +1,10 @@
 # Magnetometer
 
-PWR_MGMT_1 = 0x6B
-SMPLRT_DIV = 0x19
-CONFIG = 0x1A
-GYRO_CONFIG = 0x1B
-INT_ENABLE = 0x38
-ACCEL_XOUT_H = 0x3B
-ACCEL_YOUT_H = 0x3D
-ACCEL_ZOUT_H = 0x3F
-GYRO_XOUT_H = 0x43
-GYRO_YOUT_H = 0x45
-GYRO_ZOUT_H = 0x47
-
-Ax = 0
-Ay = 0
-Az = 0
-
-Gx = 0
-Gy = 0
-Gz = 0
+X_axis_H = 0x03  # Address of X-axis MSB data register
+Z_axis_H = 0x05  # Address of Z-axis MSB data register
+Y_axis_H = 0x07  # Address of Y-axis MSB data register
+declination = -0.00669  # define declination angle of location where measurement going to be done
+pi = 3.14159265359  # define pi value
 
 
 class MPU_class:
@@ -59,7 +45,28 @@ class MPU_class:
 
     def update(self):
         print("update")
+        # magnetométer infója
+        # Read Accelerometer raw value
+        x = self.read_raw_data(X_axis_H)
+        z = self.read_raw_data(Z_axis_H)
+        y = self.read_raw_data(Y_axis_H)
+
+        #print(x, y, z)
+
+        heading = math.atan2(y, x) + declination
+
+        # Due to declination check for >360 degree
+        if heading > 2 * pi:
+            heading = heading - 2 * pi
+
+        # check for sign
+        if heading < 0:
+            heading = heading + 2 * pi
+
+        # convert into angle
+        heading_angle = int(heading * 180 / pi)
+        self.angle = heading_angle
 
     def htmlFormat(self):
-        content = "Távolság : " + str(self.angle)
+        content = "Szög : " + str(self.angle)
         return content

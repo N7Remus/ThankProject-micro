@@ -35,3 +35,5 @@ from L298N_sens import L298N_class
 '''
 from MPU_sens import MPU_class
 m = MPU_class()
+m.update()
+print(m.htmlForm())
