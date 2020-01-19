@@ -158,16 +158,16 @@ def Magnetometer_Init():
     bus.write_byte_data(Device_Address_MPU, 0x37, 0x02)
     bus.write_byte_data(Device_Address_MPU, 0x6A, 0x00)
     bus.write_byte_data(Device_Address_MPU, 0x6B, 0x00)
-    '''
+
     # write to Configuration Register A
-    bus.write_byte_data(Device_Address, Register_A, 0x70)
+    bus.write_byte_data(Device_Address_MPU, Register_A, 0x70)
 
     # Write to Configuration Register B for gain
-    bus.write_byte_data(Device_Address, Register_B, 0xa0)
+    bus.write_byte_data(Device_Address_MPU, Register_B, 0xa0)
 
     # Write to mode Register for selecting mode
-    bus.write_byte_data(Device_Address, Register_mode, 0)
-    '''
+    bus.write_byte_data(Device_Address_MPU, Register_mode, 0)
+
 
 
 def read_raw_data(dev,addr):
