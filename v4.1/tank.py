@@ -347,7 +347,7 @@ def index():
     # visszaadja a render sablont           //new
     return render_template("index.html")
 
-@app.route("/ontrols")
+@app.route("/controls")
 def controls():
     # visszaadja a render sablont           //new
     return render_template("controls.html")
