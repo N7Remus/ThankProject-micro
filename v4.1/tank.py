@@ -347,12 +347,12 @@ def index():
     # visszaadja a render sablont           //new
     return render_template("index.html")
 
-@app.route("/ontrols.html")
+@app.route("/ontrols")
 def controls():
     # visszaadja a render sablont           //new
     return render_template("controls.html")
 
-@app.route("/controls_withoutcam.html")
+@app.route("/controls_withoutcam")
 def controls_withoutcam():
     # visszaadja a render sablont           //new
     return render_template("controls_withoutcam.html")
