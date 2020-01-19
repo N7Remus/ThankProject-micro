@@ -56,6 +56,7 @@ GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
 GPIO.setup(GPIO_ECHO, GPIO.IN)
 # publikus változó a távolság meghatározásához
 dist = 0
+col_dist = 0
 avg_dist = 0 # átlag
 req_dist = 0 # mért értékek száma
 max_dist = 0 # maximum
@@ -63,6 +64,7 @@ min_dist = 0 # minimum
 
 # hőmérséklet
 temp = 0
+col_temp = 0
 avg_temp = 0  # átlagos hőmérséklet
 max_temp = 0  # maximális mért érték
 min_temp = 0  # minimális mért érték
@@ -70,6 +72,7 @@ req_temp = 0  # hőmérséklet mérések száma
 
 # páratartalom
 hum = 0
+col_hum = 0
 avg_hum = 0  # átlagos páratartalom
 max_hum = 0  # maximális mért érték
 min_hum = 0  # minimális mért érték
@@ -77,6 +80,7 @@ req_hum = 0  # páratartalom mérések száma
 
 # szög
 heading_angle = 0
+col_heading_angle = 0
 avg_heading_angle = 0
 req_heading_angle = 0
 min_heading_angle = 0
@@ -90,7 +94,7 @@ pwm = [GPIO.PWM(LF_PIN, 50), GPIO.PWM(LB_PIN, 50), GPIO.PWM(RF_PIN, 50), GPIO.PW
 def distance():
     # hc-sr04
     # ez a függvény végzi az ultrahangos szenzor működtetését.
-    global dist
+    global dist,col_dist,avg_dist,max_dist,min_dist,req_dist
     # kiadjuk az impulzust
     GPIO.output(GPIO_TRIGGER, True)
 
@@ -113,13 +117,21 @@ def distance():
     # és osztás kettővel az oda vissza út miatt         //new
     d = (TimeElapsed * 34300) / 2
 
+    if dist<min_dist:
+        min_dist=dist
+    if dist>max_dist:
+        max_dist=dist
+
+    col_dist += int(d)
+    req_dist += 1
+    avg_dist = int(col_dist/req_dist)
     dist = int(d)
 
 
 def DHT11_read():
     # Érzékelő típusának beállítása : DHT11,DHT22 vagy AM2302
     # A szenzorunk a következő GPIO-ra van kötve:
-    global temp, hum
+    global temp, hum,max_hum,max_temp,min_temp,min_hum,avg_hum,avg_temp,col_temp,col_hum,req_temp,req_hum,req_temp,req_temp
     gpio = 17
 
     # Ha a read_retry eljárást használjuk. Akkor akár 15x is megpróbálja kiolvasni az érzékelőből az adatot (és minden olvasás előtt 2 másodpercet vár).
@@ -130,6 +142,25 @@ def DHT11_read():
     if humidity is not None and temperature is not None:
         temp = temperature
         hum = humidity
+
+        if temp < min_temp:
+            min_temp = temp
+        if temp > max_temp:
+            max_temp = temp
+
+        col_temp += int(temp)
+        req_temp += 1
+        avg_temp = int(col_temp / req_temp)
+
+        if hum < min_hum:
+            min_hum = hum
+        if hum > max_hum:
+            max_hum = hum
+
+        col_hum += int(hum)
+        req_hum += 1
+        avg_hum = int(col_hum / req_hum)
+
     else:
         return "", ""
 
@@ -240,7 +271,7 @@ def gyro():
 
 
 def angle():
-    global heading_angle
+    global heading_angle,avg_heading_angle,min_heading_angle,max_heading_angle,col_heading_angle,req_heading_angle
     # magnetométer infója
     # Read Accelerometer raw value
     x = read_raw_data(Device_Address_MPU, X_axis_H)
@@ -259,8 +290,19 @@ def angle():
     if heading < 0:
         heading = heading + 2 * pi
 
+
+
     # convert into angle
     heading_angle = int(heading * 180 / pi)
+    if heading_angle < min_heading_angle:
+            min_heading_angle = heading_angle
+    if heading_angle > max_heading_angle:
+        max_heading_angle = heading_angle
+
+    col_heading_angle += int(heading_angle)
+    req_heading_angle += 1
+    avg_heading_angle = int(col_heading_angle / req_heading_angle)
+
 
 
 bus = smbus.SMBus(1)  # or bus = smbus.SMBus(0) for older version boards
@@ -288,7 +330,6 @@ class mySensors(threading.Thread):
             distance()
             time.sleep(1)
             save_data("distance", dist)
-
         pass
 
 
@@ -400,7 +441,7 @@ def controls():
     return render_template("controls.html")
 
 @app.route("/cam")
-def controls():
+def cam():
     # visszaadja a render sablont           //new
     return render_template("view_camera.html")
 
