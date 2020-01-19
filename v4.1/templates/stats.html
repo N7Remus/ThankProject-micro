@@ -3,9 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>stats</title>
+    <script src="/jquery.min.js"></script>
+
 </head>
 <body>
+<script>
+function get_fb(){
+    var feedback = $.ajax({
+        type: "POST",
+        url: "feedback.php",
+        async: false
+    }).complete(function(){
+        setTimeout(function(){get_fb();}, 10000);
+    }).responseText;
 
+    $('div.feedback-box').html(feedback);
+}
+</script>
 
 </body>
 </html>
