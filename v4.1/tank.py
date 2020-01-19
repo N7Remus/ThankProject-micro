@@ -532,7 +532,7 @@ def generate_mail(withstat=False):
                 smtp_server = "smtp.gmail.com"
                 port = 587  # For starttls
                 ImgFileName = "img.jpg"
-                cv2.imwrite(ImgFileName, encodedImage)
+                cv2.imwrite(ImgFileName, outputFrame)
                 sender_email = config['EMAIL']['Email_user']
                 password = config['EMAIL']['Email_password']
                 # https://realpython.com/python-send-email/
@@ -619,6 +619,12 @@ def take_pic():
     mimetype = "text/html"
     return Response(content, mimetype=mimetype)
 
+@app.route("/take_pic_with_stat")
+def take_pic_with_stat():
+    generate_mail(True)
+    content = "<h2> Elküldve -statisztizkával </h2>"
+    mimetype = "text/html"
+    return Response(content, mimetype=mimetype)
 
 @app.route("/ajax/")
 def ajax():
