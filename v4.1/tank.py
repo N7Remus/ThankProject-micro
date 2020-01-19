@@ -348,12 +348,21 @@ def index():
     return render_template("index.html")
 
 @app.route("/ontrols.html")
-def index():
-    # return the rendered template
-    # return render_template("index.html")
-    # return render_template("joystick.html")
+def controls():
     # visszaadja a render sablont           //new
     return render_template("controls.html")
+
+@app.route("/controls_withoutcam.html")
+def controls_withoutcam():
+    # visszaadja a render sablont           //new
+    return render_template("controls_withoutcam.html")
+
+@app.route("/stats.html")
+def stats():
+    # visszaadja a render sablont           //new
+    return render_template("stats.html")
+
+
 
 
 def detect_motion():
