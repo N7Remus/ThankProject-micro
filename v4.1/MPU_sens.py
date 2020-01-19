@@ -9,15 +9,15 @@ pi = 3.14159265359  # define pi value
 
 class MPU_class:
 
-    def __init__(self, Device_Address_MPU=0x1e # HMC5883L magnetometer device address
+    def __init__(self,bus ,Device_Address_MPU=0x1e # HMC5883L magnetometer device address
                  ):
+        self.bus = bus
         self.Device_Address = Device_Address_MPU
         self.angle = 0
     def Magnetometer_Init(self):
-        global bus
-        bus.write_byte_data(self.Device_Address, 0x37, 0x02)
-        bus.write_byte_data(self.Device_Address, 0x6A, 0x00)
-        bus.write_byte_data(self.Device_Address, 0x6B, 0x00)
+        self.bus.write_byte_data(self.Device_Address, 0x37, 0x02)
+        self.bus.write_byte_data(self.Device_Address, 0x6A, 0x00)
+        self.bus.write_byte_data(self.Device_Address, 0x6B, 0x00)
 
         '''# write to Configuration Register A
         bus.write_byte_data(self.Device_Address, Register_A, 0x70)
@@ -29,10 +29,9 @@ class MPU_class:
         bus.write_byte_data(self.Device_Address, Register_mode, 0)
         '''
     def read_raw_data(self,addr):
-        global bus
         # Accelero and Gyro value are 16-bit
-        high = bus.read_byte_data(self.Device_Address, addr)
-        low = bus.read_byte_data(self.Device_Address, addr + 1)
+        high = self.bus.read_byte_data(self.Device_Address, addr)
+        low = self.bus.read_byte_data(self.Device_Address, addr + 1)
 
         # concatenate higher and lower value
         value = ((high << 8) | low)

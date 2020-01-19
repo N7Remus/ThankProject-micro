@@ -34,6 +34,6 @@ from HC-SR04_sens import HCSR_class
 from L298N_sens import L298N_class
 '''
 from MPU_sens import MPU_class
-m = MPU_class()
+m = MPU_class(bus)
 m.update()
 print(m.htmlForm())
