@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>stats</title>
-    <script src="/jquery.min.js"></script>
+    <script src=" /jquery.min.js"></script>
 
 </head>
 <body>
@@ -11,7 +11,7 @@
 function get_fb(){
     var feedback = $.ajax({
         type: "POST",
-        url: "feedback.php",
+        url: "stat",
         async: false
     }).complete(function(){
         setTimeout(function(){get_fb();}, 10000);
@@ -20,6 +20,7 @@ function get_fb(){
     $('div.feedback-box').html(feedback);
 }
 </script>
-
+<div id="feedback-box">
+</div>
 </body>
 </html>

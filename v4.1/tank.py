@@ -459,6 +459,17 @@ def video_feed():
                     mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
+@app.route("/stat")
+def stat():
+    # return the response generated along with the specific media
+    # type (mime type)
+    content = ""
+    content += "<h2>Angle : " + str(heading_angle) + "</h2>"
+
+    mimetype = "text/html"
+
+    return Response(content, mimetype=mimetype)
+
 @app.route("/ajax/")
 def ajax():
     global Ax, Ay, Az, Gx, Gy, Gz
