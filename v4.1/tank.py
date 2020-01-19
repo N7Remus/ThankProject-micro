@@ -15,6 +15,7 @@ import math
 import time
 import os.path
 import Adafruit_DHT
+import datetime
 
 # Raspberry specifikus modulok
 try:
@@ -237,6 +238,13 @@ bus = smbus.SMBus(1)  # or bus = smbus.SMBus(0) for older version boards
 Device_Address = 0x68  # MPU6050 device address
 MPU_Init()
 
+def save_data(filename,data):
+    if type(data)==list:
+        data = ', '.join(data)
+    ts = time.time()
+    st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+    with open("saved_data/"+filename,"a") as f:
+        f.write(str(st) + str(data) + "\n")
 
 class mySensors(threading.Thread):
     def __init__(self):
@@ -247,6 +255,8 @@ class mySensors(threading.Thread):
         while True:
             distance()
             time.sleep(1)
+            save_data("distance",dist)
+
         pass
 
 
@@ -259,6 +269,7 @@ class myGyroSensor(threading.Thread):
         while True:
             gyro()
             time.sleep(1)
+            save_data("gyro", [Ax, Ay, Az, Gx, Gy, Gz])
         pass
 
 
@@ -271,6 +282,7 @@ class myDHTSensor(threading.Thread):
         while True:
             DHT11_read()
             time.sleep(1)
+            save_data("DHT",[temp,hum])
         pass
 
 
@@ -283,6 +295,7 @@ class myAngleSensor(threading.Thread):
         while True:
             angle()
             time.sleep(1)
+            save_data("angle",heading_angle)
         pass
 
 
