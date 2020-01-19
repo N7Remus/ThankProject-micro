@@ -48,10 +48,32 @@ GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
 GPIO.setup(GPIO_ECHO, GPIO.IN)
 # publikus változó a távolság meghatározásához
 dist = 0
+avg_dist = 0 # átlag
+req_dist = 0 # mért értékek száma
+max_dist = 0 # maximum
+min_dist = 0 # minimum
+
 # hőmérséklet
 temp = 0
+avg_temp = 0  # átlagos hőmérséklet
+max_temp = 0  # maximális mért érték
+min_temp = 0  # minimális mért érték
+req_temp = 0  # hőmérséklet mérések száma
+
 # páratartalom
 hum = 0
+avg_hum = 0  # átlagos páratartalom
+max_hum = 0  # maximális mért érték
+min_hum = 0  # minimális mért érték
+req_hum = 0  # páratartalom mérések száma
+
+# szög
+heading_angle = 0
+avg_heading_angle = 0
+req_heading_angle = 0
+min_heading_angle = 0
+max_heading_angle = 0
+
 
 # a pwm pinek, melyekkel a motrok vezérelve lesznek az alábbi tömbben lesznek letárolva
 pwm = [GPIO.PWM(LF_PIN, 50), GPIO.PWM(LB_PIN, 50), GPIO.PWM(RF_PIN, 50), GPIO.PWM(RB_PIN, 50)]
@@ -105,7 +127,6 @@ def DHT11_read():
 
 
 Device_Address_MPU = 0x1e  # HMC5883L magnetometer device address
-heading_angle = 0
 PWR_MGMT_1 = 0x6B
 SMPLRT_DIV = 0x19
 CONFIG = 0x1A
@@ -170,8 +191,7 @@ def Magnetometer_Init():
     bus.write_byte_data(Device_Address_MPU, Register_mode, 0)
 
 
-
-def read_raw_data(dev,addr):
+def read_raw_data(dev, addr):
     # Accelero and Gyro value are 16-bit
     high = bus.read_byte_data(dev, addr)
     low = bus.read_byte_data(dev, addr + 1)
@@ -188,14 +208,14 @@ def read_raw_data(dev,addr):
 def gyro():
     global Ax, Ay, Az, Gx, Gy, Gz
     # A gyorsulásmérő nyers adatainak beolvasása            //new
-    acc_x = read_raw_data(Device_Address,ACCEL_XOUT_H)
-    acc_y = read_raw_data(Device_Address,ACCEL_YOUT_H)
-    acc_z = read_raw_data(Device_Address,ACCEL_ZOUT_H)
+    acc_x = read_raw_data(Device_Address, ACCEL_XOUT_H)
+    acc_y = read_raw_data(Device_Address, ACCEL_YOUT_H)
+    acc_z = read_raw_data(Device_Address, ACCEL_ZOUT_H)
 
     # A giroszkóp nyers adatainak beolvasása            //new
-    gyro_x = read_raw_data(Device_Address,GYRO_XOUT_H)
-    gyro_y = read_raw_data(Device_Address,GYRO_YOUT_H)
-    gyro_z = read_raw_data(Device_Address,GYRO_ZOUT_H)
+    gyro_x = read_raw_data(Device_Address, GYRO_XOUT_H)
+    gyro_y = read_raw_data(Device_Address, GYRO_YOUT_H)
+    gyro_z = read_raw_data(Device_Address, GYRO_ZOUT_H)
 
     # Full scale range +/- 250 degree/C as per sensitivity scale factor
     # A teljes mérési tartománya +- 250 °C érzékenységi skála tényezőnként          //new
@@ -210,13 +230,14 @@ def gyro():
           "\tAx=%.2f g" % Ax, "\tAy=%.2f g" % Ay, "\tAz=%.2f g" % Az)
     '''
 
+
 def angle():
     global heading_angle
     # magnetométer infója
     # Read Accelerometer raw value
-    x = read_raw_data(Device_Address_MPU,X_axis_H)
-    z = read_raw_data(Device_Address_MPU,Z_axis_H)
-    y = read_raw_data(Device_Address_MPU,Y_axis_H)
+    x = read_raw_data(Device_Address_MPU, X_axis_H)
+    z = read_raw_data(Device_Address_MPU, Z_axis_H)
+    y = read_raw_data(Device_Address_MPU, Y_axis_H)
 
     print(x, y, z)
 
@@ -238,13 +259,15 @@ bus = smbus.SMBus(1)  # or bus = smbus.SMBus(0) for older version boards
 Device_Address = 0x68  # MPU6050 device address
 MPU_Init()
 
-def save_data(filename,data):
-    if type(data)==list:
+
+def save_data(filename, data):
+    if type(data) == list:
         data = ', '.join(data)
     ts = time.time()
     st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-    with open("saved_data/"+filename,"a") as f:
+    with open("saved_data/" + filename, "a") as f:
         f.write(str(st) + str(data) + "\n")
+
 
 class mySensors(threading.Thread):
     def __init__(self):
@@ -255,7 +278,7 @@ class mySensors(threading.Thread):
         while True:
             distance()
             time.sleep(1)
-            save_data("distance",dist)
+            save_data("distance", dist)
 
         pass
 
@@ -282,7 +305,7 @@ class myDHTSensor(threading.Thread):
         while True:
             DHT11_read()
             time.sleep(1)
-            save_data("DHT",[temp,hum])
+            save_data("DHT", [temp, hum])
         pass
 
 
@@ -295,7 +318,7 @@ class myAngleSensor(threading.Thread):
         while True:
             angle()
             time.sleep(1)
-            save_data("angle",heading_angle)
+            save_data("angle", heading_angle)
         pass
 
 
@@ -303,6 +326,7 @@ sensors = mySensors()
 sensors_2 = myAngleSensor()
 sensors_3 = myDHTSensor()
 sensors_4 = myGyroSensor()
+
 
 def changePWM(pin, goal):
     global pwm
@@ -360,22 +384,23 @@ def index():
     # visszaadja a render sablont           //new
     return render_template("index.html")
 
+
 @app.route("/controls")
 def controls():
     # visszaadja a render sablont           //new
     return render_template("controls.html")
+
 
 @app.route("/controls_withoutcam")
 def controls_withoutcam():
     # visszaadja a render sablont           //new
     return render_template("controls_withoutcam.html")
 
+
 @app.route("/stats.html")
 def stats():
     # visszaadja a render sablont           //new
     return render_template("stats.html")
-
-
 
 
 def detect_motion():
