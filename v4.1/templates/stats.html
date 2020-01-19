@@ -10,7 +10,7 @@
 <script>
 function get_fb(){
     var feedback = $.ajax({
-        type: "POST",
+        type: "GET",
         url: "stat",
         async: false
     }).complete(function(){
