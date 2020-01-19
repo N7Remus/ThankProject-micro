@@ -3,15 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <title>Főoldal</title>
+    <style>
+    .row{
+        margin:10px auto;
+        background:rgba(0,0,0,0.5);
+        padding:10px;
+        width:50%;
+        text-align:center;
+    }
+    .row a{
+        display:block;
+        padding:10px 15px;
+        width:100%;
+        text-decoration:none;
+        color:rgba(255,255,255,1);
+        font-weight:bold;
+        font-size:1.5em;
+        text-transform:uppercase;
+    }
+    .row:hover{
+        background:rgba(0,0,0,0.8);
+        transition: .5s linear all;
+    }
+</style>
 </head>
 <body>
-<div>
+<div  class="row">
     <a href="/controls">Írányítás</a>
 </div>
-<div>
+<div  class="row">
     <a href="/controls_withoutcam">Írányítás-kamera nélkül</a>
 </div>
-<div>
+<div  class="row">
+    <a href="/cam">kamera megfigyelő - sima kamera kép</a>
+</div>
+
+<div class="row">
     <a href="/stats.html">statisztikák</a>
 </div>
 

@@ -1,4 +1,9 @@
 # képmanipuláló modulok
+import smtplib, ssl
+import configparser
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
 from imutils.video import VideoStream
 import imutils
 import cv2
@@ -28,6 +33,9 @@ import smbus  # I2C kommunkáció
 # pinbeállítás
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
+
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 # CONTROLS
 # LEFT_FORWARD_PIN - lf
@@ -391,6 +399,11 @@ def controls():
     # visszaadja a render sablont           //new
     return render_template("controls.html")
 
+@app.route("/cam")
+def controls():
+    # visszaadja a render sablont           //new
+    return render_template("view_camera.html")
+
 
 @app.route("/controls_withoutcam")
 def controls_withoutcam():
@@ -451,6 +464,82 @@ def generate():
                bytearray(encodedImage) + b'\r\n')
 
 
+def generate_mail(withstat=False):
+    # grab global references to the output frame and lock variables
+    # hozzáadja a globális referenciát a kimeneti képkockához és zárolja a változókat           //new
+    global outputFrame, lock
+
+    # loop over frames from the output stream
+    # várakozik amíg a zároló meg nem kapta, ellenőrzi hogy elérhető-e a kimeneti képkocka, ellenkező esetben továbbugrik           //new
+    while True:
+        # wait until the lock is acquired
+        with lock:
+            # check if the output frame is available, otherwise skip
+            # the iteration of the loop
+            if outputFrame is None:
+                continue
+
+            # encode the frame in JPEG format
+            # képkocka kódolása JPEG formátumban            //new
+            (flag, encodedImage) = cv2.imencode(".jpg", outputFrame)
+
+            # ensure the frame was successfully encoded
+            # ellenőrzi hogy sikeres volt-e a kódolás           //new
+            if not flag:
+                continue
+            else:
+                smtp_server = "smtp.gmail.com"
+                port = 587  # For starttls
+                ImgFileName = "img.jpg"
+                cv2.imwrite(ImgFileName, encodedImage)
+                sender_email = config['EMAIL']['Email_user']
+                password = config['EMAIL']['Email_password']
+                # https://realpython.com/python-send-email/
+                # https://stackoverflow.com/questions/13070038/attachment-image-to-send-by-mail-using-python
+
+                # Create a secure SSL context
+                context = ssl.create_default_context()
+
+                # Try to log in to server and send email
+                img_data = open(ImgFileName, 'rb').read()
+                msg = MIMEMultipart()
+                msg['Subject'] = 'subject'
+                msg['From'] = sender_email
+                msg['To'] = "remaigabor@gmail.com"
+
+                if withstat:
+                    content = ""
+
+                    content += "Átlagos Távolság : " + str(avg_dist)
+                    content += "\n Jelenlegi Távolság : " + str(dist)
+
+                    content += "\n Átlagos Hőmérséklet : " + str(avg_temp)
+                    content += "\n Jelenlegi Hőmérséklet : " + str(temp)
+
+                    content += "\n Átlagos Páratartalom : " + str(avg_hum)
+                    content += "\n Jelenlegi Páratartalom : " + str(hum)
+
+                    content += "\n Átlagos Szög : " + str(avg_heading_angle)
+                    content += "\n Jelenlegi Szög : " + str(heading_angle)
+                    text = MIMEText(content)
+                else:
+                    text = MIMEText("test")
+
+                msg.attach(text)
+                image = MIMEImage(img_data, name=os.path.basename(ImgFileName))
+                msg.attach(image)
+
+                s = smtplib.SMTP(smtp_server, port)
+                s.ehlo()
+                s.starttls()
+                s.ehlo()
+                s.login(sender_email, password)
+                s.sendmail(sender_email, "remaigabor@gmail.com", msg.as_string())
+                s.quit()
+                break
+
+
+
 @app.route("/video_feed")
 def video_feed():
     # return the response generated along with the specific media
@@ -464,11 +553,31 @@ def stat():
     # return the response generated along with the specific media
     # type (mime type)
     content = ""
-    content += "<h2>Angle : " + str(heading_angle) + "</h2>"
+
+    content += "<h2>Átlagos Távolság : " + str(avg_dist) + "</h2>"
+    content += "<h2>Jelenlegi Távolság : " + str(dist) + "</h2>"
+
+    content += "<h2>Átlagos Hőmérséklet : " + str(avg_temp) + "</h2>"
+    content += "<h2>Jelenlegi Hőmérséklet : " + str(temp) + "</h2>"
+
+    content += "<h2>Átlagos Páratartalom : " + str(avg_hum) + "</h2>"
+    content += "<h2>Jelenlegi Páratartalom : " + str(hum) + "</h2>"
+
+    content += "<h2>Átlagos Szög : " + str(avg_heading_angle) + "</h2>"
+    content += "<h2>Jelenlegi Szög : " + str(heading_angle) + "</h2>"
 
     mimetype = "text/html"
 
     return Response(content, mimetype=mimetype)
+
+
+@app.route("/take_pic")
+def take_pic():
+    generate_mail()
+    content = "<h2> Elküldve </h2>"
+    mimetype = "text/html"
+    return Response(content, mimetype=mimetype)
+
 
 @app.route("/ajax/")
 def ajax():

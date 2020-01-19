@@ -20,8 +20,33 @@ function get_fb(){
 }
 setInterval(get_fb, 10000);
 
+function take_pic(s = false){
+    var u = "";
+    if (s){
+        u="take_pic_with_stat";
+    }else{
+        u="take_pic";
+    }
+    var kep = $.ajax({
+            type: "GET",
+            url: u,
+            async: false
+        }).complete(function(){
+        }).responseText;
+        $('#kep-box').html(kep);
+}
+
 </script>
 <div id="feedback-box">
+    Betöltés Folyamatban...
 </div>
+
+<div id="kep-box">
+</div>
+
+<button onclick="take_pic()">Email kérek a jelenlegi képkockáról</button>
+<button onclick="take_pic(true)">Email kérek a jelenlegi képkockáról-statisztikával</button>
+
+
 </body>
 </html>
