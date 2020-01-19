@@ -262,6 +262,7 @@ MPU_Init()
 
 def save_data(filename, data):
     if type(data) == list:
+        data = [str(x) for x in data]
         data = ', '.join(data)
     ts = time.time()
     st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
