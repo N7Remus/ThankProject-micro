@@ -134,7 +134,7 @@ class HCSR_class:
         self.echo = echo
         self.distance = 0
         GPIO.setup(trigger, GPIO.OUT)
-        GPIO.setup(trigger, GPIO.OUT)
+        GPIO.setup(echo, GPIO.OUT)
 
     def printPin(self):
         print("A modul trigger: " + str(self.trigger) + " pinen kommunikál")
