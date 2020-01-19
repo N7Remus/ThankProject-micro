@@ -57,10 +57,10 @@ GPIO.setup(GPIO_ECHO, GPIO.IN)
 # publikus változó a távolság meghatározásához
 dist = 0
 col_dist = 0
-avg_dist = 0 # átlag
-req_dist = 0 # mért értékek száma
-max_dist = 0 # maximum
-min_dist = 0 # minimum
+avg_dist = 0  # átlag
+req_dist = 0  # mért értékek száma
+max_dist = 0  # maximum
+min_dist = 0  # minimum
 
 # hőmérséklet
 temp = 0
@@ -86,7 +86,6 @@ req_heading_angle = 0
 min_heading_angle = 0
 max_heading_angle = 0
 
-
 # a pwm pinek, melyekkel a motrok vezérelve lesznek az alábbi tömbben lesznek letárolva
 pwm = [GPIO.PWM(LF_PIN, 50), GPIO.PWM(LB_PIN, 50), GPIO.PWM(RF_PIN, 50), GPIO.PWM(RB_PIN, 50)]
 
@@ -94,7 +93,7 @@ pwm = [GPIO.PWM(LF_PIN, 50), GPIO.PWM(LB_PIN, 50), GPIO.PWM(RF_PIN, 50), GPIO.PW
 def distance():
     # hc-sr04
     # ez a függvény végzi az ultrahangos szenzor működtetését.
-    global dist,col_dist,avg_dist,max_dist,min_dist,req_dist
+    global dist, col_dist, avg_dist, max_dist, min_dist, req_dist
     # kiadjuk az impulzust
     GPIO.output(GPIO_TRIGGER, True)
 
@@ -117,21 +116,21 @@ def distance():
     # és osztás kettővel az oda vissza út miatt         //new
     d = (TimeElapsed * 34300) / 2
 
-    if dist<min_dist:
-        min_dist=dist
-    if dist>max_dist:
-        max_dist=dist
+    if dist < min_dist:
+        min_dist = dist
+    if dist > max_dist:
+        max_dist = dist
 
     col_dist += int(d)
     req_dist += 1
-    avg_dist = int(col_dist/req_dist)
+    avg_dist = int(col_dist / req_dist)
     dist = int(d)
 
 
 def DHT11_read():
     # Érzékelő típusának beállítása : DHT11,DHT22 vagy AM2302
     # A szenzorunk a következő GPIO-ra van kötve:
-    global temp, hum,max_hum,max_temp,min_temp,min_hum,avg_hum,avg_temp,col_temp,col_hum,req_temp,req_hum,req_temp,req_temp
+    global temp, hum, max_hum, max_temp, min_temp, min_hum, avg_hum, avg_temp, col_temp, col_hum, req_temp, req_hum, req_temp, req_temp
     gpio = 17
 
     # Ha a read_retry eljárást használjuk. Akkor akár 15x is megpróbálja kiolvasni az érzékelőből az adatot (és minden olvasás előtt 2 másodpercet vár).
@@ -271,7 +270,7 @@ def gyro():
 
 
 def angle():
-    global heading_angle,avg_heading_angle,min_heading_angle,max_heading_angle,col_heading_angle,req_heading_angle
+    global heading_angle, avg_heading_angle, min_heading_angle, max_heading_angle, col_heading_angle, req_heading_angle
     # magnetométer infója
     # Read Accelerometer raw value
     x = read_raw_data(Device_Address_MPU, X_axis_H)
@@ -290,19 +289,16 @@ def angle():
     if heading < 0:
         heading = heading + 2 * pi
 
-
-
     # convert into angle
     heading_angle = int(heading * 180 / pi)
     if heading_angle < min_heading_angle:
-            min_heading_angle = heading_angle
+        min_heading_angle = heading_angle
     if heading_angle > max_heading_angle:
         max_heading_angle = heading_angle
 
     col_heading_angle += int(heading_angle)
     req_heading_angle += 1
     avg_heading_angle = int(col_heading_angle / req_heading_angle)
-
 
 
 bus = smbus.SMBus(1)  # or bus = smbus.SMBus(0) for older version boards
@@ -439,6 +435,7 @@ def index():
 def controls():
     # visszaadja a render sablont           //new
     return render_template("controls.html")
+
 
 @app.route("/cam")
 def cam():
@@ -580,7 +577,6 @@ def generate_mail(withstat=False):
                 break
 
 
-
 @app.route("/video_feed")
 def video_feed():
     # return the response generated along with the specific media
@@ -619,12 +615,14 @@ def take_pic():
     mimetype = "text/html"
     return Response(content, mimetype=mimetype)
 
+
 @app.route("/take_pic_with_stat")
 def take_pic_with_stat():
     generate_mail(True)
     content = "<h4> Elküldve -statisztizkával </h4>"
     mimetype = "text/html"
     return Response(content, mimetype=mimetype)
+
 
 @app.route("/ajax/")
 def ajax():
@@ -635,7 +633,7 @@ def ajax():
     y = request.args.get('h')
     x = int(float(x))
     y = int(float(y))
-
+    save_data("inputs", [x, y])
     left = 0
     right = 0
     # balra vagy jobra megyek?
