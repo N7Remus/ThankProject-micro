@@ -170,10 +170,10 @@ def Magnetometer_Init():
     '''
 
 
-def read_raw_data(addr):
+def read_raw_data(dev,addr):
     # Accelero and Gyro value are 16-bit
-    high = bus.read_byte_data(Device_Address, addr)
-    low = bus.read_byte_data(Device_Address, addr + 1)
+    high = bus.read_byte_data(dev, addr)
+    low = bus.read_byte_data(dev, addr + 1)
 
     # concatenate higher and lower value
     value = ((high << 8) | low)
@@ -187,14 +187,14 @@ def read_raw_data(addr):
 def gyro():
     global Ax, Ay, Az, Gx, Gy, Gz
     # A gyorsulásmérő nyers adatainak beolvasása            //new
-    acc_x = read_raw_data(ACCEL_XOUT_H)
-    acc_y = read_raw_data(ACCEL_YOUT_H)
-    acc_z = read_raw_data(ACCEL_ZOUT_H)
+    acc_x = read_raw_data(Device_Address,ACCEL_XOUT_H)
+    acc_y = read_raw_data(Device_Address,ACCEL_YOUT_H)
+    acc_z = read_raw_data(Device_Address,ACCEL_ZOUT_H)
 
     # A giroszkóp nyers adatainak beolvasása            //new
-    gyro_x = read_raw_data(GYRO_XOUT_H)
-    gyro_y = read_raw_data(GYRO_YOUT_H)
-    gyro_z = read_raw_data(GYRO_ZOUT_H)
+    gyro_x = read_raw_data(Device_Address,GYRO_XOUT_H)
+    gyro_y = read_raw_data(Device_Address,GYRO_YOUT_H)
+    gyro_z = read_raw_data(Device_Address,GYRO_ZOUT_H)
 
     # Full scale range +/- 250 degree/C as per sensitivity scale factor
     # A teljes mérési tartománya +- 250 °C érzékenységi skála tényezőnként          //new
@@ -213,9 +213,9 @@ def angle():
     global heading_angle
     # magnetométer infója
     # Read Accelerometer raw value
-    x = read_raw_data(X_axis_H)
-    z = read_raw_data(Z_axis_H)
-    y = read_raw_data(Y_axis_H)
+    x = read_raw_data(Device_Address_MPU,X_axis_H)
+    z = read_raw_data(Device_Address_MPU,Z_axis_H)
+    y = read_raw_data(Device_Address_MPU,Y_axis_H)
 
     print(x, y, z)
 
